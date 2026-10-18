@@ -2,6 +2,8 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <new>
 #include <stdexcept>
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
@@ -10,6 +12,16 @@
 #include <spawn.h>
 #include <sys/wait.h>
 #include <crt_externs.h>
+
+namespace { bool reject_host_allocation = false; }
+
+void* operator new(std::size_t size) {
+    if (reject_host_allocation) throw std::bad_alloc();
+    if (void* memory = std::malloc(size ? size : 1)) return memory;
+    throw std::bad_alloc();
+}
+void operator delete(void* memory) noexcept { std::free(memory); }
+void operator delete(void* memory, std::size_t) noexcept { std::free(memory); }
 
 namespace {
 int failure(int code, const char* condition) {
@@ -89,7 +101,15 @@ int profile_ranges() {
         {0xE00000000ull, 0x100000ull},
     };
     for (const auto& range : ranges) {
-        if (!nx::plat::reserve(range[0], range[1])) {
+        bool reserved = false;
+        reject_host_allocation = true;
+        try { reserved = nx::plat::reserve(range[0], range[1]); }
+        catch (const std::bad_alloc&) {
+            reject_host_allocation = false;
+            return failure(21, "la reserva de arranque pide memoria al allocator del host");
+        }
+        reject_host_allocation = false;
+        if (!reserved) {
             std::fprintf(stderr, "Rango rechazado: 0x%llx + 0x%llx\n",
                          static_cast<unsigned long long>(range[0]), static_cast<unsigned long long>(range[1]));
             describe_regions(range[0], range[0] + range[1]);

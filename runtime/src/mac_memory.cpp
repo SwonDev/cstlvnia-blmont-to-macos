@@ -1,6 +1,7 @@
 #include "platform.h"
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
@@ -9,7 +10,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <utility>
-#include <vector>
 
 namespace nx::plat {
 
@@ -18,10 +18,12 @@ namespace nx::plat {
 namespace {
 
 std::mutex reservation_lock;
-std::vector<std::pair<uint64_t, uint64_t>> reservations;
+// No usar malloc durante el arranque: sus zonas pueden ocupar un rango aún pendiente de reservar.
+std::array<std::pair<uint64_t, uint64_t>, 64> reservations{};
+size_t reservation_count = 0;
 
 bool owned(uint64_t begin, uint64_t end) {
-    return std::any_of(reservations.begin(), reservations.end(), [&](const auto& range) {
+    return std::any_of(reservations.begin(), reservations.begin() + reservation_count, [&](const auto& range) {
         return begin >= range.first && end <= range.second;
     });
 }
@@ -88,9 +90,13 @@ bool reserve(uint64_t addr, uint64_t size) {
     const uint64_t page = getpagesize();
     if (!size || addr + size < addr || addr % page || size % page) return false;
     std::lock_guard lock(reservation_lock);
+    if (reservation_count == reservations.size() ||
+        std::any_of(reservations.begin(), reservations.begin() + reservation_count, [&](const auto& range) {
+            return addr < range.second && addr + size > range.first;
+        })) return false;
     void* p = mmap(reinterpret_cast<void*>(addr), size, PROT_NONE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
     if (p != MAP_FAILED && uint64_t(p) == addr) {
-        reservations.push_back({addr, addr + size});
+        reservations[reservation_count++] = {addr, addr + size};
         return true;
     }
     if (p != MAP_FAILED) munmap(p, size);
@@ -100,7 +106,7 @@ bool reserve(uint64_t addr, uint64_t size) {
     p = mmap(reinterpret_cast<void*>(addr), size, PROT_NONE,
              MAP_FIXED | MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
     if (p == MAP_FAILED) return false;
-    reservations.push_back({addr, addr + size});
+    reservations[reservation_count++] = {addr, addr + size};
     return true;
 }
 
