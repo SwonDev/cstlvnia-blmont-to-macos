@@ -24,6 +24,7 @@ class Tools:
         self.rpaths = {}
         self.arch = 'arm64'
         self.minimum = '15.0'
+        self.component_minimums = {}
         self.extra_dependency = None
         self.fail_signature = False
 
@@ -54,7 +55,8 @@ class Tools:
         if tool == 'lipo':
             return self.arch
         if tool == 'vtool':
-            return 'platform MACOS\nminos ' + self.minimum + '\nsdk 27.0\n'
+            minimum = self.component_minimums.get(Path(args[-1]).name, self.minimum)
+            return 'platform MACOS\nminos ' + minimum + '\nsdk 27.0\n'
         if tool == 'sips':
             Path(args[-1]).write_bytes(b'PNG propio')
             return ''
@@ -83,7 +85,7 @@ class Project(unittest.TestCase):
         self.spv = self.write('datos/spirv/' + self.key + '.spv', b'\x03\x02\x23\x07' + b'\0' * 16)
         self.manifest = self.write('datos/spirv/results.tsv', b'hash\tstatus\tspv_bytes\n0123456789abcdef\tok\t20\n')
         self.write('datos/user/NO_COPIAR', b'partida propia')
-        for name in ('SuperMarioWonderRecomp-MIT.txt', 'Ryubing-MIT.txt'):
+        for name in ('SuperMarioWonderRecomp-MIT.txt', 'Ryubing-MIT.txt', 'FidelityFX-FSR-MIT.txt'):
             self.write('licenses/' + name, b'Licencia MIT de fixture propio\n')
         for formula, name in bundle.LIBRARIES.items():
             self.write(formula + '/lib/' + name, b'dylib propia')
@@ -223,7 +225,9 @@ class Packaging(Project):
         self.assertEqual(info['SDL_FILESYSTEM_BASE_DIR_TYPE'], 'resource')
         self.assertEqual(info['LSMinimumSystemVersion'], '15.0')
         resources = contents / 'Resources'
-        self.assertEqual(len(list((resources / 'Licencias').iterdir())), 4)
+        self.assertEqual(len(list((resources / 'Licencias').iterdir())), 5)
+        self.assertEqual((resources / 'Licencias/FidelityFX-FSR-MIT.txt').read_bytes(),
+                         (self.root / 'licenses/FidelityFX-FSR-MIT.txt').read_bytes())
         self.assertEqual((resources / 'GameData/language.txt').read_text(), 'es\n')
         self.assertFalse((resources / 'GameData/user').exists())
         self.assertEqual((resources / 'GameData/extract/romfs/propio.txt').read_bytes(), b'recurso propio')
@@ -241,6 +245,39 @@ class Packaging(Project):
         self.assertTrue(any(c[0:2] == ['install_name_tool', '-change'] and '@executable_path' in c[3]
                             for c in self.tools.calls))
         self.assertTrue(all(not paths for paths in self.tools.rpaths.values()))
+
+    def test_language_is_preserved_for_each_supported_locale(self):
+        for language in ('es', 'en', 'ja'):
+            with self.subTest(language=language):
+                source = self.write('datos/language.txt', (language + '\n').encode())
+                output = self.output.with_name(language + '.app')
+                self.build(output=output)
+                self.assertEqual((output / 'Contents/Resources/GameData/language.txt').read_bytes(),
+                                 source.read_bytes())
+
+    def test_invalid_language_is_rejected_before_packaging(self):
+        for index, language in enumerate(('fr', 'ES', '../es', 'es\nja', '')):
+            with self.subTest(language=language):
+                self.output = self.output.with_name('invalido-' + str(index) + '.app')
+                self.write('datos/language.txt', language.encode())
+                with self.assertRaises((bundle.BundleError, OSError)):
+                    self.build()
+                self.assert_no_package()
+                self.assertEqual(self.tools.calls, [])
+
+    def test_fidelityfx_license_is_required_before_packaging(self):
+        (self.root / 'licenses/FidelityFX-FSR-MIT.txt').unlink()
+        with self.assertRaises((bundle.BundleError, OSError)):
+            self.build()
+        self.assert_no_package()
+
+    def test_minimum_macos_is_maximum_of_all_components(self):
+        self.tools.component_minimums = {'castlevania': '15.0', 'libSDL3.dylib': '26.0',
+                                       'libMoltenVK.dylib': '12.0'}
+        report = self.build()
+        info = plistlib.loads((self.output / 'Contents/Info.plist').read_bytes())
+        self.assertEqual(info['LSMinimumSystemVersion'], '26.0')
+        self.assertEqual(report['macos_minimo'], '26.0')
 
     def test_signature_failure_external_dependency_and_non_arm64_do_not_publish(self):
         self.tools.fail_signature = True

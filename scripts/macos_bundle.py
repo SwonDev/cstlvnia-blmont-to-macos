@@ -201,6 +201,11 @@ def build_bundle(*, binary: Path, data: Path, icon: Path, output: Path,
     data = data.expanduser().resolve(strict=True)
     if target.is_relative_to(data) or (install_dir is not None and directory.is_relative_to(data)):
         raise BundleError('El paquete y la instalación deben quedar fuera de los datos de entrada')
+    language_path = data / 'language.txt'
+    language_bytes = require_file(language_path).read_bytes() if language_path.exists() or language_path.is_symlink() else b'es\n'
+    language = language_bytes.decode('utf-8').strip()
+    if language not in ('es', 'en', 'ja'):
+        raise BundleError('language.txt sólo admite es, en o ja')
     analysis = [require_file(data / 'analysis' / (name + '.bin')) for name in ('main', 'sdk', 'subsdk0')]
     shaders = shader_files(data)
     romfs = (data / 'extract/romfs').resolve(strict=True)
@@ -237,6 +242,7 @@ def build_bundle(*, binary: Path, data: Path, icon: Path, output: Path,
     mvk_file, mvk_license = library_input('molten-vk', moltenvk, execute)
     licenses = {'Runtime-MIT.txt': require_file(root / 'licenses/SuperMarioWonderRecomp-MIT.txt'),
                 'Ryubing-MIT.txt': require_file(root / 'licenses/Ryubing-MIT.txt'),
+                'FidelityFX-FSR-MIT.txt': require_file(root / 'licenses/FidelityFX-FSR-MIT.txt'),
                 'SDL3.txt': sdl_license, 'MoltenVK-Apache.txt': mvk_license}
     # Todo se valida antes de copiar RomFS. No se incluyen user/, partidas ni preferencias de la entrada.
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -290,7 +296,7 @@ def build_bundle(*, binary: Path, data: Path, icon: Path, output: Path,
         for source in shaders:
             shutil.copyfile(source, game_data / 'spirv' / source.name)
         shutil.copyfile(data / 'spirv/results.tsv', game_data / 'spirv/results.tsv')
-        (game_data / 'language.txt').write_text('es\n', encoding='utf-8')
+        (game_data / 'language.txt').write_bytes(language_bytes)
         if any(p.is_symlink() for p in app.rglob('*')):
             raise BundleError('El paquete final no puede contener enlaces simbólicos')
         for component in [*bundled, executable, app]:
@@ -298,7 +304,7 @@ def build_bundle(*, binary: Path, data: Path, icon: Path, output: Path,
         execute(['codesign', '--verify', '--deep', '--strict', str(app)])
         report = {'version': VERSION, 'identificador': IDENTIFIER, 'arquitectura': 'arm64',
                   'binario_sha256': sha256(executable), 'icono_original_sha256': sha256(icon),
-                  'macos_minimo': minimum, 'shaders': len(shaders), 'firma_local_verificada': True,
+                  'macos_minimo': minimum, 'idioma': language, 'shaders': len(shaders), 'firma_local_verificada': True,
                   'instalado': False, 'jugabilidad_verificada': False, 'herramientas': commands,
                   'app': target.name, 'registro': log_path.name,
                   'licencias_sha256': {name: sha256(path) for name, path in licenses.items()}}
@@ -314,7 +320,7 @@ def build_bundle(*, binary: Path, data: Path, icon: Path, output: Path,
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, epilog=(
-        'Python 3.12+. Requiere las herramientas de Xcode y las licencias de runtime/Ryubing en licenses/. '
+        'Python 3.12+. Requiere las herramientas de Xcode y las licencias de runtime/Ryubing/FidelityFX en licenses/. '
         'Las bibliotecas deben conservar LICENSE.txt (SDL3) o LICENSE (MoltenVK) en su prefijo. '
         'Los datos, el icono y el binario se aportan localmente; no se descargan.'))
     required = {'binary': 'Ejecutable Mach-O arm64 compilado localmente',
