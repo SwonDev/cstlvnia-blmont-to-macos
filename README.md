@@ -24,6 +24,8 @@ La adaptación privada anterior mostró menú, cinemáticas, prólogo, HUD, diá
 | Límite del traductor | Un programa geometry no está soportado. No se declara que carezca de uso en todo el juego. |
 | Build completo desde el pipeline público | Terminado desde las entradas propias; 33 CTest y suite de 72 pruebas Python sin fallos (una omitida). |
 | App generada por ese pipeline | Empaquetada, firmada e instalada en QA aislada. Recorrido de vídeo de 165 s, 1.130 muestras sin alternancias detectadas, recarga en frío y otros 80 s de partida observada. |
+| Revalidación del registro de memoria | Nueva app de `7bb7f5d`: otros 166,6 s, 1.116 fotogramas sin alternancias fuertes y recarga de 20,3 s. Contratos locales sin fallos. |
+| CI en otro host | Linux pasa. El runner macOS 26 M1 pasa 32/33 CTest y rechaza un rango ocupado por el allocator del sistema. Compatibilidad de ese host pendiente; [ejecución y diagnóstico](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39156879599). |
 
 Los informes AOT conservan tres instrucciones estáticas sin implementar (dos `mov` en `main` y una `stg` en `sdk`); su presencia limita la cobertura y no se presenta como soporte completo de todas las rutas.
 
@@ -54,7 +56,10 @@ Clona las fuentes y comprueba las herramientas:
 git clone https://github.com/SwonDev/cstlvnia-blmont-to-macos.git
 cd cstlvnia-blmont-to-macos
 ./build-macos.sh --doctor
+./build-macos.sh --stage test --jobs 4
 ```
+
+Ejecuta los contratos antes de generar el AOT: también comprueban los rangos de memoria de este perfil. Si aparece «reserva de rango del juego», ese host no supera la comprobación; no continúes con la compilación costosa ni fuerces mapas sobre memoria ocupada. La prueba en macOS 27 de este proyecto pasa, pero el runner M1 descrito arriba todavía falla. `--doctor` comprueba herramientas, no esa compatibilidad.
 
 Prepara estos tres argumentos; el repositorio no obtiene ni descifra el contenido por ti:
 

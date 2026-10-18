@@ -19,7 +19,7 @@ Ejecución local del 18 de octubre de 2026 sobre Apple silicon, desde las fuente
 
 Las capturas históricas se identifican en la [galería](GALERIA.md). La imagen del nuevo paquete documenta su propio recorrido; no se usa la imagen histórica para atribuirle un resultado nuevo.
 
-## Identidad del paquete privado probado
+## Identidad del primer paquete privado probado
 
 ```text
 Paquete: 1.1.4, dev.swondev.castlevania, arm64
@@ -31,6 +31,21 @@ c222c3aa8ae3c1107c06ef639180c32d8a5101572826a165a85eebe2f0b37153
 ```
 
 Herramientas observadas: Xcode 27.1, SDK macOS 27.0, Python 3.12.14, .NET 10.0.401, CMake 4.4.2, Ninja 1.13.2, SDL 3.4.18 y MoltenVK 1.4.2. El mínimo calculado de esta app es macOS 27.0. En otra máquina debe calcularse a partir de sus propios componentes.
+
+## Revalidación del bootstrap de memoria
+
+La revisión `7bb7f5d` evita asignaciones dinámicas del registro de reservas. La regresión que prohíbe `operator new` durante cada reserva falla con el registro anterior y pasa con el array fijo. El build completo vuelve a pasar 33 CTest y 72 pruebas Python, una omitida. Se creó e instaló otra app privada nueva, sin reemplazar la del usuario, y se probó después de firmarla:
+
+```text
+Ejecutable SHA-256:
+bfdf04e832acc62378b73ca98802d236be634c3227cc81605765e2e05251ee3a
+CodeResources SHA-256:
+c222c3aa8ae3c1107c06ef639180c32d8a5101572826a165a85eebe2f0b37153
+```
+
+El recorrido adicional duró 166,6 s y conservó ocho PNG. Se observaron partida con Trevor, fondos y HUD, y el menú original con 1280 × 720; 1.116 fotogramas medidos no mostraron alternancias ABA/ABCA fuertes. No hubo errores fatales ni shaders ausentes. PCM: 120 s, 48 kHz estéreo, pico 9.338 y cero muestras saturadas. Recursos internos y directorio de ejecución ajeno al checkout. Otra recarga de 20,3 s recuperó el perfil QA, sin errores ni shaders ausentes. Las capturas públicas 13–14 siguen perteneciendo al primer paquete identificado arriba.
+
+La [CI de esa revisión](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39156879599) pasa en Linux, pero **falla en macOS 26 M1**: 32/33 CTest pasan; `mac_memory` rechaza un rango con dos regiones de 4 MiB `VM_MEMORY_MALLOC_SMALL`. La separación del test en un proceso nuevo y el registro sin allocator no resuelven esa colisión. No se ha certificado ese host ni se ha cambiado el test para ocultarla. El guard sólo intercepta `operator new`, no el allocator interno de macOS. Se conserva el rechazo de mapas ocupados. Ejecutar `--stage test` antes del AOT permite detectar este límite sin generar los artefactos grandes.
 
 ## Límites conservados
 
