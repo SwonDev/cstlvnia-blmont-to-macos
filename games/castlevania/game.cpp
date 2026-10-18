@@ -8,7 +8,7 @@ namespace nx {
 
 const game::Info game::kInfo = {
     "castlevania", "Castlevania: Belmont's Curse", 0x0100BA4026E94000ull,
-    "dev.swondev.castlevania", "../trabajo/runtime-data", 0x1000000, true, true, true, true,
+    "dev.swondev.castlevania", "private/castlevania", 0x1000000, true, true, true, true,
 };
 
 // El perfil conserva la configuración y el contenido originales del juego.

@@ -3,6 +3,16 @@ __pycache__/
 *.pyc
 .venv/
 private/
+/private
+*.nca
+*.nso
+*.nsz
+*.xcz
+*.bin
+*.rar
+*.7z
+*.zip
+*.tar.gz
 work/
 *.keys
 *.nsp

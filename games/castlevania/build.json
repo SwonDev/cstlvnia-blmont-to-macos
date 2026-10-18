@@ -1,0 +1,30 @@
+{
+  "content_version": "1.1.0",
+  "bundle_version": "1.1.4",
+  "modules": [
+    {
+      "name": "main",
+      "base": "0x4000000000",
+      "build_id": "0f1169aa7d0fa4529c861f96adec306e00000000000000000000000000000000",
+      "image_sha256": "daefe60b1808c7545b9b1d969651b7e19abee9c325737ab64a01a7c86535076d",
+      "image_bytes": 116853376,
+      "nso_sha256_reference": "c71362eb3cc09826f209896d225de212863ed8bb261383893ee7555d52b46319"
+    },
+    {
+      "name": "sdk",
+      "base": "0x4010000000",
+      "build_id": "8af286d7bfb124125a15e96a39cb1ab7bb4c0180000000000000000000000000",
+      "image_sha256": "8a8088fcae209c9d398aa6c055833e7d00312111e74d02217f1b8363e65b5d74",
+      "image_bytes": 12121312,
+      "nso_sha256_reference": "a1e55456e86a76b37a9ad7645ab85b0f47adc8cc5da20d33244961f31d751d44"
+    },
+    {
+      "name": "subsdk0",
+      "base": "0x4020000000",
+      "build_id": "8205ead9e1f93d8b2337feaddefac330fe6ace9e000000000000000000000000",
+      "image_sha256": "ca4cfda0413d09f7de10bfb028db854485e6842e9214a1bcc3027a63e873f26f",
+      "image_bytes": 5692296,
+      "nso_sha256_reference": "4ca34bbd65029c76bff1b53969aceac8326de458df0eba14265f05e126183669"
+    }
+  ]
+}

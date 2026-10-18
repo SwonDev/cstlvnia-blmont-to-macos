@@ -13,6 +13,8 @@ HleRegistrar::HleRegistrar(const char* name, HleFn fn) { functions()[name] = fn;
 uint32_t handle_add(std::shared_ptr<KObject>) { return 42; }
 void notify_all() {}
 uint64_t find_symbol(const char*) { return 1; }
+uint64_t hle_address(const char*) { std::abort(); }
+uint64_t kernel_alloc(uint64_t, uint64_t) { std::abort(); }
 const LoadedModule* module_at(uint64_t) { return nullptr; }
 void call(CPU&, uint64_t) {}
 void log(const char*, ...) {}

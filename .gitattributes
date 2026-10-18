@@ -1,0 +1,2 @@
+# Los espacios de contexto forman parte de los parches upstream y se conservan.
+*.patch -whitespace
