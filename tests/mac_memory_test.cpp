@@ -12,6 +12,8 @@
 #include <spawn.h>
 #include <sys/wait.h>
 #include <crt_externs.h>
+#include <mach-o/dyld.h>
+#include <mach-o/loader.h>
 
 namespace { bool reject_host_allocation = false; }
 
@@ -100,6 +102,29 @@ int profile_ranges() {
         {0xC00000000ull, 0x30000000ull},
         {0xE00000000ull, 0x100000ull},
     };
+    const auto* header = reinterpret_cast<const mach_header_64*>(_dyld_get_image_header(0));
+    const auto* command = reinterpret_cast<const load_command*>(header + 1);
+    bool guarded = false;
+    for (uint32_t i = 0; i < header->ncmds; ++i) {
+        if (command->cmd == LC_SEGMENT_64) {
+            const auto* segment = reinterpret_cast<const segment_command_64*>(command);
+            if (std::strcmp(segment->segname, "__GUEST") == 0) {
+                const uint64_t begin = segment->vmaddr + _dyld_get_image_vmaddr_slide(0);
+                const uint64_t end = begin + segment->vmsize;
+                guarded = segment->filesize == 0 && segment->initprot == 0 && segment->maxprot == 0;
+                for (const auto& range : ranges)
+                    guarded &= range[0] >= begin && range[0] + range[1] <= end;
+            }
+        }
+        command = reinterpret_cast<const load_command*>(reinterpret_cast<const char*>(command) + command->cmdsize);
+    }
+    if (!guarded) return failure(22, "reserva Mach-O ausente o sin cobertura tras ASLR");
+    void* allocations[256]{};
+    for (auto& memory : allocations) {
+        memory = std::malloc(65536);
+        if (!memory) return failure(23, "asignación del host previa a las reservas");
+        std::memset(memory, 0x5A, 65536);
+    }
     for (const auto& range : ranges) {
         bool reserved = false;
         reject_host_allocation = true;
@@ -120,6 +145,12 @@ int profile_ranges() {
     }
     for (const auto& range : ranges)
         if (munmap(reinterpret_cast<void*>(range[0]), range[1])) return failure(12, "munmap de rango");
+    for (void* memory : allocations) {
+        const auto* bytes = static_cast<const unsigned char*>(memory);
+        for (size_t i = 0; i < 65536; ++i)
+            if (bytes[i] != 0x5A) return failure(24, "memoria del allocator del host modificada");
+        std::free(memory);
+    }
     return 0;
 }
 

@@ -94,6 +94,7 @@
   "runtime/src/language.h",
   "runtime/src/lm_packet.h",
   "runtime/src/loader.cpp",
+  "runtime/src/mac_guest_reservation.s",
   "runtime/src/mac_memory.cpp",
   "runtime/src/mac_video.h",
   "runtime/src/mac_video.mm",

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
+#include <mach-o/dyld.h>
+#include <mach-o/loader.h>
 #include <mutex>
 #include <stdexcept>
 #include <sys/mman.h>
@@ -48,10 +50,22 @@ kern_return_t region_at(uint64_t point, mach_vm_address_t& address, mach_vm_size
 }
 
 bool empty_system_reservation(uint64_t begin, uint64_t end) {
-    // Este intervalo queda por encima de la caché dyld y por debajo de sus guardas.
-    // Se comprueba cada región: una reserva nuestra PROT_NONE conserva max_protection
-    // y también debe rechazarse, igual que cualquier mapa legible o guarda de macOS.
-    if (begin < 0x400000000ull || end > 0xFC0000000ull) return false;
+    const auto* header = reinterpret_cast<const mach_header_64*>(_dyld_get_image_header(0));
+    const auto* command = reinterpret_cast<const load_command*>(header + 1);
+    bool ours = false;
+    for (uint32_t i = 0; i < header->ncmds; ++i) {
+        if (command->cmd == LC_SEGMENT_64) {
+            const auto* segment = reinterpret_cast<const segment_command_64*>(command);
+            if (std::strcmp(segment->segname, "__GUEST") == 0) {
+                const uint64_t first = segment->vmaddr + _dyld_get_image_vmaddr_slide(0);
+                ours = segment->filesize == 0 && segment->initprot == 0 && segment->maxprot == 0 &&
+                    begin >= first && end <= first + segment->vmsize;
+            }
+        }
+        command = reinterpret_cast<const load_command*>(reinterpret_cast<const char*>(command) + command->cmdsize);
+    }
+    if (!ours) return false;
+    // La pertenencia al segmento no basta: rechazar también cualquier subrango ya ocupado.
     while (begin < end) {
         mach_vm_address_t address = begin;
         mach_vm_size_t size = 0;
@@ -100,8 +114,8 @@ bool reserve(uint64_t addr, uint64_t size) {
         return true;
     }
     if (p != MAP_FAILED) munmap(p, size);
-    // Darwin ignora el hint dentro de su reserva vacía de direcciones bajas.
-    // Solo sustituimos esa reserva tras inspeccionarla; nunca datos o guardas.
+    // Darwin ignora el hint dentro del segmento vacío. Sólo sustituimos un
+    // subrango de nuestro __GUEST que siga sin acceso, protección máxima ni tag.
     if (!empty_system_reservation(addr, addr + size)) return false;
     p = mmap(reinterpret_cast<void*>(addr), size, PROT_NONE,
              MAP_FIXED | MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);

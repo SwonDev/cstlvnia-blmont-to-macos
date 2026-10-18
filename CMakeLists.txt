@@ -4,6 +4,16 @@ project(CastlevaniaMac C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(APPLE)
+    enable_language(ASM)
+    function(nx_guest_reservation target)
+        target_sources(${target} PRIVATE runtime/src/mac_guest_reservation.s)
+        # El margen absorbe ASLR y deja __LINKEDIT por debajo de la guarda del sistema a 63 GiB.
+        target_link_options(${target} PRIVATE
+            "LINKER:-segaddr,__GUEST,0x3c0000000" "LINKER:-segprot,__GUEST,---,---")
+    endfunction()
+endif()
+
 # The game this build is for: games/<NX_GAME>/ holds what only that game needs (game.cpp: nx/game.h), the shared
 # runtime is the rest. One build directory per game.
 set(NX_GAME "castlevania" CACHE STRING "Game to build (a folder under games/)")
@@ -120,6 +130,7 @@ if(NX_TESTS AND NOT ANDROID)
     if(APPLE)
         add_executable(mac_memory_test tests/mac_memory_test.cpp runtime/src/mac_memory.cpp)
         target_include_directories(mac_memory_test PRIVATE runtime/src)
+        nx_guest_reservation(mac_memory_test)
         add_test(NAME mac_memory COMMAND mac_memory_test)
         add_executable(switch2bridge_test tests/switch2bridge_test.cpp runtime/src/switch2bridge.cpp)
         target_include_directories(switch2bridge_test PRIVATE runtime/src)
@@ -332,6 +343,7 @@ elseif(APPLE)
     find_path(NX_VULKAN_INCLUDE vulkan/vulkan.h HINTS /opt/homebrew/include /usr/local/include)
     add_executable(${NX_GAME} ${NX_RUNTIME_SOURCES} runtime/src/platform_mac.cpp runtime/src/mac_memory.cpp
         runtime/src/switch2bridge.cpp runtime/src/memguard_mac.cpp runtime/src/mac_video.mm)
+    nx_guest_reservation(${NX_GAME})
     target_include_directories(${NX_GAME} PRIVATE runtime/include runtime/src "${NX_GAME_DIR}" "${NX_VULKAN_INCLUDE}")
     find_library(NX_APPKIT AppKit REQUIRED)
     target_link_libraries(${NX_GAME} PRIVATE ${NX_COMPILED_MODULES} SDL3::SDL3 ${NX_APPKIT})
