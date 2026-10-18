@@ -1,0 +1,21 @@
+[
+  ".github/workflows/docs.yml",
+  ".gitignore",
+  "CONTRIBUTING.md",
+  "CREDITS.md",
+  "LICENSE",
+  "PUBLIC_FILES.json",
+  "README.md",
+  "docs/ANTECEDENTE-D2R.md",
+  "docs/CASO-CASTLEVANIA.md",
+  "docs/ENTREGA-Y-PRIVACIDAD.md",
+  "docs/GALERIA.md",
+  "docs/METODOLOGIA.md",
+  "docs/PROYECTOS-RELACIONADOS.md",
+  "docs/SWITCH2BRIDGE.md",
+  "scripts/verify_docs.py",
+  "templates/ACEPTACION.md",
+  "templates/EXPERIMENTO.md",
+  "templates/PROYECTO.md",
+  "tests/test_verify_docs.py"
+]

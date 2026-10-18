@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+private/
+work/
+*.keys
+*.nsp
+*.xci
+*.nca
+*.nso
+*.spv
+*.app/
+*.dmg
+*.log
