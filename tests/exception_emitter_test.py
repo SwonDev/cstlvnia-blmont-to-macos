@@ -49,7 +49,8 @@ std::abort();''')
     def ejecutar(self, code, landing=12, initial='', calls='throw GuestException{1,nullptr};'):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / 'fixture.cpp'
-            source.write_text('''#include <nx/exception.h>
+            source.write_text('''#include <cstdlib>
+#include <nx/exception.h>
 #define NXB 0ull
 namespace nx {
 [[noreturn]] void unimpl(CPU&,uint64_t,const char*) { std::abort(); }

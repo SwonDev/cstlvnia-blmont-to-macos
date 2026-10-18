@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <mach/mach.h>
+#include <mach/mach_vm.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -11,6 +13,29 @@ int failure(int code, const char* condition) {
     std::fprintf(stderr, "Memoria Mac: condición %d (%s), página %ld bytes\n",
                  code, condition, static_cast<long>(getpagesize()));
     return code;
+}
+
+void describe_regions(uint64_t begin, uint64_t end) {
+    for (unsigned n = 0; begin < end && n < 32; ++n) {
+        mach_vm_address_t address = begin;
+        mach_vm_size_t size = 0;
+        natural_t depth = 0;
+        vm_region_submap_info_data_64_t info{};
+        kern_return_t status;
+        do {
+            mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
+            status = mach_vm_region_recurse(mach_task_self(), &address, &size, &depth,
+                reinterpret_cast<vm_region_recurse_info_t>(&info), &count);
+            if (status != KERN_SUCCESS || !info.is_submap) break;
+            ++depth;
+            address = begin;
+        } while (true);
+        std::fprintf(stderr, "Región: estado=%d dirección=0x%llx tamaño=0x%llx protección=%d máxima=%d tag=%u\\n",
+                     status, static_cast<unsigned long long>(address), static_cast<unsigned long long>(size),
+                     info.protection, info.max_protection, info.user_tag);
+        if (status != KERN_SUCCESS || !size || address + size <= begin || address >= end) break;
+        begin = address + size;
+    }
 }
 }
 
@@ -59,6 +84,7 @@ int main() {
         if (!nx::plat::reserve(range[0], range[1])) {
             std::fprintf(stderr, "Rango rechazado: 0x%llx + 0x%llx\n",
                          static_cast<unsigned long long>(range[0]), static_cast<unsigned long long>(range[1]));
+            describe_regions(range[0], range[0] + range[1]);
             return failure(9, "reserva de rango del juego");
         }
         if (!nx::plat::commit(range[0], page)) return failure(10, "commit inicial del rango");
