@@ -7,6 +7,9 @@
 #include <mach/mach_vm.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <crt_externs.h>
 
 namespace {
 int failure(int code, const char* condition) {
@@ -30,7 +33,7 @@ void describe_regions(uint64_t begin, uint64_t end) {
             ++depth;
             address = begin;
         } while (true);
-        std::fprintf(stderr, "Región: estado=%d dirección=0x%llx tamaño=0x%llx protección=%d máxima=%d tag=%u\\n",
+        std::fprintf(stderr, "Región: estado=%d dirección=0x%llx tamaño=0x%llx protección=%d máxima=%d tag=%u\n",
                      status, static_cast<unsigned long long>(address), static_cast<unsigned long long>(size),
                      info.protection, info.max_protection, info.user_tag);
         if (status != KERN_SUCCESS || !size || address + size <= begin || address >= end) break;
@@ -39,7 +42,7 @@ void describe_regions(uint64_t begin, uint64_t end) {
 }
 }
 
-int main() {
+int partial_pages() {
     constexpr uint64_t base = 0xC00000000ull;
     const uint64_t page = getpagesize();
     const uint64_t size = page * 4;
@@ -72,6 +75,11 @@ int main() {
     catch (const std::runtime_error&) {}
     for (unsigned char value : foreign) if (value != 0x5A) return failure(18, "memoria ajena intacta");
     if (munmap(bytes, size)) return failure(8, "munmap inicial");
+    return 0;
+}
+
+int profile_ranges() {
+    const uint64_t page = getpagesize();
     constexpr uint64_t ranges[][2] = {
         {0x400000000ull, 0x180000000ull},
         {0x600000000ull, 0x400000000ull},
@@ -92,5 +100,21 @@ int main() {
     }
     for (const auto& range : ranges)
         if (munmap(reinterpret_cast<void*>(range[0]), range[1])) return failure(12, "munmap de rango");
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    if (argc == 2 && std::strcmp(argv[1], "--profile-ranges") == 0) return profile_ranges();
+    if (int code = partial_pages()) return code;
+    // El arranque real reserva el perfil antes de provocar excepciones y asignaciones del test.
+    char option[] = "--profile-ranges";
+    char* arguments[] = {argv[0], option, nullptr};
+    pid_t child = 0;
+    const int error = posix_spawn(&child, argv[0], nullptr, nullptr, arguments, *_NSGetEnviron());
+    if (error) return failure(19, "crear proceso limpio del perfil");
+    int status = 0;
+    if (waitpid(child, &status, 0) != child || !WIFEXITED(status))
+        return failure(20, "terminar proceso del perfil");
+    if (WEXITSTATUS(status)) return WEXITSTATUS(status);
     std::puts("Reserva exacta, rechazo de solapamientos y páginas parciales: PASS");
 }
