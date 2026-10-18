@@ -8,6 +8,27 @@ import struct
 from .containers import Container, Stage, SPH_TYPE, extract
 
 
+def discover_unity_files(root):
+    """Incluye archivos serializados Unity aunque no tengan extensión."""
+    result = []
+    for path in sorted(Path(root).rglob("*")):
+        if not path.is_file():
+            continue
+        with path.open("rb") as source:
+            header = source.read(64)
+        if path.suffix in {".bundle", ".assets"} or header.startswith((b"UnityFS\0", b"UnityRaw\0", b"UnityWeb\0", b"UnityWebData")):
+            result.append(path)
+            continue
+        if len(header) < 48:
+            continue
+        metadata, size, version, offset = struct.unpack_from(">4I", header)
+        if version >= 22:
+            metadata, size, offset = struct.unpack_from(">IQQ", header, 20)
+        if 5 <= version <= 100 and 0 < metadata <= size == path.stat().st_size and 20 <= offset <= size:
+            result.append(path)
+    return result
+
+
 def scan_blob(blob, identity):
     stages, rejected = [], []
     cursor = 0
@@ -42,9 +63,41 @@ def store_blob(blob, identity, outdir):
     return stages, rejected
 
 
-def main():
+def shader_blobs(path, compute_only=False):
+    """Devuelve objetos Shader/ComputeShader y sus blobs Switch descomprimidos."""
     import UnityPy
     from UnityPy.helpers import CompressionHelper
+
+    for obj in UnityPy.load(str(path)).objects:
+        identity = str(obj.path_id)
+        if obj.type.name == "ComputeShader":
+            tree = obj.read_typetree()
+            variants = tree.get("variants", [])
+            empty = bool(variants) and all(not variant.get("kernels") for variant in variants)
+            yield identity, "compute", tree.get("m_Name", "ComputeShader"), bytes(4) if empty else obj.get_raw_data()
+            continue
+        if obj.type.name != "Shader" or compute_only:
+            continue
+        shader = obj.read()
+        for platform, offsets, sizes, decoded_sizes in zip(shader.platforms, shader.offsets, shader.compressedLengths, shader.decompressedLengths, strict=True):
+            if platform != 19:
+                raise ValueError(f"Plataforma de shader inesperada: {platform}")
+            if isinstance(offsets, int):
+                offsets, sizes, decoded_sizes = [offsets], [sizes], [decoded_sizes]
+            compressed = bytes(shader.compressedBlob)
+            chunks = []
+            for offset, size, decoded_size in zip(offsets, sizes, decoded_sizes, strict=True):
+                if offset < 0 or size < 0 or decoded_size < 0 or offset + size > len(compressed):
+                    raise ValueError("Intervalo comprimido fuera del shader")
+                chunk = CompressionHelper.decompress_lz4(compressed[offset:offset + size], decoded_size)
+                if len(chunk) != decoded_size:
+                    raise ValueError("Tamaño descomprimido incoherente")
+                chunks.append(chunk)
+            yield identity, "shader", shader.m_ParsedForm.m_Name, b"".join(chunks)
+
+
+def main():
+    import UnityPy
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("data", type=Path)
@@ -55,50 +108,22 @@ def main():
     if not args.out.resolve().is_relative_to(private.resolve()):
         parser.error("La salida debe estar dentro de private/")
     args.out.mkdir(parents=True, exist_ok=True)
-    paths = sorted(args.data.rglob("*.bundle")) + sorted(args.data.glob("*.assets"))
+    paths = discover_unity_files(args.data)
     report = {"unitypy": UnityPy.__version__, "archivos": len(paths), "shaders": 0, "compute": 0, "etapas": 0, "sin_programas": [], "errores": []}
     hashes = set()
     for number, path in enumerate(paths):
         try:
-            environment = UnityPy.load(str(path))
-            for obj in environment.objects:
-                identity = str(obj.path_id)
-                destination = args.out / f"{number}-{identity}"
-                if obj.type.name == "ComputeShader":
-                    report["compute"] += 1
-                    stages, rejected = store_blob(obj.get_raw_data(), identity, destination)
-                    report["errores"].extend([path.name, obj.path_id, offset, detail] for offset, detail in rejected)
-                    if not stages:
-                        report["errores"].append([path.name, obj.path_id, "ComputeShader sin bloques NVN reconocidos"])
-                    report["etapas"] += len(stages)
-                    hashes.update(stage.hash for stage in stages)
+            for identity, kind, name, blob in shader_blobs(path, args.compute_only):
+                report["compute" if kind == "compute" else "shaders"] += 1
+                if blob == b"\0\0\0\0":
+                    report["sin_programas"].append([path.name, identity, name])
                     continue
-                if obj.type.name != "Shader" or args.compute_only:
-                    continue
-                shader = obj.read()
-                report["shaders"] += 1
-                for platform, offsets, sizes, decoded_sizes in zip(shader.platforms, shader.offsets, shader.compressedLengths, shader.decompressedLengths, strict=True):
-                    if platform != 19:
-                        report["errores"].append([path.name, obj.path_id, f"Plataforma de shader inesperada: {platform}"])
-                        continue
-                    if isinstance(offsets, int):
-                        offsets, sizes, decoded_sizes = [offsets], [sizes], [decoded_sizes]
-                    compressed = bytes(shader.compressedBlob)
-                    chunks = []
-                    for offset, size, decoded_size in zip(offsets, sizes, decoded_sizes, strict=True):
-                        if offset < 0 or size < 0 or offset + size > len(compressed):
-                            raise ValueError("Intervalo comprimido fuera del shader")
-                        chunks.append(CompressionHelper.decompress_lz4(compressed[offset:offset + size], decoded_size))
-                    blob = b"".join(chunks)
-                    if blob == b"\0\0\0\0":
-                        report["sin_programas"].append([path.name, obj.path_id, shader.m_ParsedForm.m_Name])
-                        continue
-                    stages, rejected = store_blob(blob, identity, destination)
-                    report["errores"].extend([path.name, obj.path_id, offset, detail] for offset, detail in rejected)
-                    if not stages:
-                        report["errores"].append([path.name, obj.path_id, "Shader Switch sin bloques NVN reconocidos"])
-                    report["etapas"] += len(stages)
-                    hashes.update(stage.hash for stage in stages)
+                stages, rejected = store_blob(blob, identity, args.out / f"{number}-{identity}")
+                report["errores"].extend([path.name, identity, offset, detail] for offset, detail in rejected)
+                if not stages:
+                    report["errores"].append([path.name, identity, "Shader Switch sin bloques NVN reconocidos"])
+                report["etapas"] += len(stages)
+                hashes.update(stage.hash for stage in stages)
         except Exception as error:
             report["errores"].append([path.name, type(error).__name__, str(error)])
         if number % 100 == 0:
