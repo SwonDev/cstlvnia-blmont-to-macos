@@ -1,9 +1,11 @@
 MIT License
 
 Copyright (c) 2026 SwonDev
+Copyright (c) 2026 BelmanteGu (base del recompilador y runtime)
 
-Applies to original documentation, templates and validation scripts only.
-Game screenshots and other third-party content are excluded; see CREDITS.md.
+Cubre el código, las adaptaciones, la documentación y las herramientas originales
+del proyecto. Se conservan los avisos y licencias de terceros en licenses/.
+Las capturas, el contenido del juego y las marcas están excluidos; véase CREDITS.md.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

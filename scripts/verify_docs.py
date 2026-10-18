@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import struct
@@ -56,14 +57,16 @@ def verify(root):
     if len(allowed) != len(set(allowed)):
         raise ValueError("Inventario duplicado")
     actual = set()
-    for path in root.rglob("*"):
-        rel = path.relative_to(root)
-        if set(rel.parts) & {".git", "__pycache__"}:
-            continue
-        if path.is_symlink():
-            raise ValueError("Enlace simbólico no aprobado")
-        if path.is_file():
-            actual.add(rel.as_posix())
+    for directory, folders, files in os.walk(root, followlinks=False):
+        base = Path(directory)
+        folders[:] = [name for name in folders if name not in {".git", "__pycache__"}
+                      and not (base == root and name == "private")]
+        for name in folders + files:
+            path = base / name
+            if path.is_symlink():
+                raise ValueError("Enlace simbólico no aprobado")
+            if path.is_file():
+                actual.add(path.relative_to(root).as_posix())
     if actual != set(allowed):
         raise ValueError("El árbol difiere de PUBLIC_FILES.json; revisar inventario")
     links = 0

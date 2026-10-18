@@ -95,3 +95,19 @@ Hash del ejecutable **y** sello de recursos después de firmar; los shaders pued
 Conservar una staging y una reversión, no paquetes completos por cada experimento. Retener por defecto pocas capturas PNG y métricas; eliminar sólo residuos identificados regenerables después de verificar la instalación. Medir espacio físico disponible antes/después: clones APFS impiden inferirlo del tamaño lógico.
 
 Actualizar runbook, caso técnico y memoria con causa, evidencia, revisión y límites. Publicar desde una lista explícita en historial nuevo; [la puerta de privacidad](ENTREGA-Y-PRIVACIDAD.md) se aplica también a imágenes y metadatos Git. Reutilizar lecciones, no copiar direcciones, políticas o acreditaciones de otro título.
+
+## De un resultado local a un port que otra persona puede compilar
+
+Una app que funciona en el workspace no demuestra que las fuentes públicas reproduzcan ese resultado. La exportación de este port se construyó desde imágenes NSO propias nuevas, sin reutilizar el AOT ni importar la caché comercial anterior. Los artefactos generados permanecen en `private/`; sólo fuentes, perfiles, pruebas, avisos y capturas documentales seleccionadas entran en Git.
+
+- Fijar identidad por módulo y receta de generación, incluidas direcciones base, excepciones, perfil, recompilador y dependencias. Un caché basado sólo en la existencia de `table.cpp` puede conservar código de una entrada distinta.
+- Verificar el entorno virtual por `sys.prefix`: resolver el enlace del ejecutable puede devolver el mismo Python base y omitir accidentalmente la reejecución en el venv.
+- Descubrir contenedores por formato además de extensión. Unity guarda recursos internos sin sufijo; un glob de `.assets` y `.bundle` omitía programas UI y vídeo.
+- Fijar el conjunto requerido de shaders por una huella de hashes ordenados. La cardinalidad por sí sola no detecta que se reemplazó o perdió un origen. Conservar metadatos de recursos al consolidar variantes y declarar etapas no soportadas.
+- Verificar el archivo fuente descargado y contrastar los archivos consumidos del checkout con él. Un marcador editable no acredita integridad. Serializar compilación y consumo de un harness que comparte `obj` y `bin`.
+- Separar un feed que no responde de un compilador bloqueado. La restauración de este harness usa NuGet oficial explícitamente y conserva la fuente fijada y las auditorías.
+- Probar los contratos sin datos comerciales también fuera de Release. La optimización ocultaba dos referencias de audio en el test standalone; se completaron sus stubs de prueba sin modificar la ruta real.
+- Calcular el mínimo macOS del conjunto ejecutable/SDL/MoltenVK. Actualizar una biblioteca puede elevarlo; no copiar un mínimo del README anterior.
+- Instalar una candidata nueva de forma exclusiva y comprobarla desde fuera del checkout, sin variables de desarrollo. Mantener perfil QA separado, un solo paquete y evidencia acotada.
+
+El [README](../README.md) describe la cadena vigente; [UPSTREAM](../UPSTREAM.md) fija procedencia y licencias. El resultado de cada construcción debe indicar sus propias pruebas y límites.

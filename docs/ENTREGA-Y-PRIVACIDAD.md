@@ -40,7 +40,7 @@ Crear un directorio nuevo con historial nuevo; no hacer público el workspace pr
 | Git | Revisar staged y todos los objetos del historial nuevo; autor público y correo noreply. No incluir historial privado. |
 | Remoto | Verificar árbol, README, enlaces e imágenes después del push. No publicar releases binarias por defecto. |
 
-Las capturas seleccionadas se conservan localmente y no se publican en este cuaderno. La autorización del usuario para preparar la galería no equivale a permiso del editor. Las [directrices de KONAMI](https://www.konami.com/games/castlevania/belmonts_curse/eu/en/guideline/) no cubren expresamente GitHub; resolver la base aplicable antes de incorporar esos PNG. Un nombre genérico no elimina los derechos de terceros ni garantiza ausencia de reclamaciones. No presentar el proyecto como oficial.
+Las catorce capturas de Castlevania se publican por decisión explícita del mantenedor como documentación técnica, con identidad, leyendas históricas y atribución en la [galería](GALERIA.md). No contienen escritorio, datos de perfil ni metadatos de texto. Están excluidas de MIT. La autorización del mantenedor no es una aprobación del editor; las [directrices de KONAMI](https://www.konami.com/games/castlevania/belmonts_curse/eu/en/guideline/) no incluyen expresamente GitHub. No se afirma una licencia del editor para esta publicación. El nombre descriptivo identifica el título adaptado y no concede derechos sobre sus marcas o contenido.
 
 ## Cuando una comprobación no puede hacerse
 

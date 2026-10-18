@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-18",
+  "method": "Lecturas GPU de la adaptación local; doce históricas y dos del pipeline público. Copias PNG sin composición ni retoque.",
+  "screenshots": [
+    {
+      "file": "assets/screenshots/01-menu.png",
+      "title": "Menú principal",
+      "context": "Histórica; no acredita la versión final.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1656386,
+      "sha256": "aee24b68da7ad3918cd4eddd9c350956b6d3875cda37a28b7c7ff9b1424c6522",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/02-cinematica-ciudad.png",
+      "title": "Cinemática: ciudad y subtítulos",
+      "context": "Histórica; recorrido de decodificación y presentación.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1185848,
+      "sha256": "40b70ea3550e59f9acb3d781ea2869078c8ad2f774b531cc18c73205d98b46f1",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/03-cinematica-trevor.png",
+      "title": "Cinemática: Trevor",
+      "context": "Histórica; imagen del vídeo original.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 633064,
+      "sha256": "c3a8d9afc88b070c2f5218bc4df6ebe029d46afd99c355c5fea75ce589ca0e29",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/04-dialogo.png",
+      "title": "Diálogo original en español",
+      "context": "Histórica; prólogo y consumidor real con entrada sintética.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1473551,
+      "sha256": "cb9b0edbb100bf4ff0956e35ddde7646cbe07621fa8b51f343c644cefb626f5b",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/05-escenario.png",
+      "title": "Escenario del prólogo",
+      "context": "Histórica; lectura GPU de la escena.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1112615,
+      "sha256": "0f3bb77221462b71fa08d3f6a6929f74ad3abc4a0d2b05f40a8a92ebde62b234",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/06-partida-hud.png",
+      "title": "Partida y HUD",
+      "context": "Histórica; personaje en el muelle durante prueba sintética.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1533970,
+      "sha256": "8d65c2ddf97cdc22137f830898bba3697de9daca0b8ae7077049b7d37f563ead",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/07-tutorial.png",
+      "title": "Tutorial de salto",
+      "context": "Histórica; no se atribuye a 1.1.4 ni a mando físico.",
+      "width": 1000,
+      "height": 563,
+      "bytes": 299949,
+      "sha256": "7430077e5f8acf2ab1a2319b9a17ebed941a6bb8995ae0564a830428a6039205",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/08-arcanos.png",
+      "title": "Arcanos",
+      "context": "Histórica; navegación original durante QA sintética.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1005361,
+      "sha256": "220f13c8b77719c6ac30a73538dfd314b9e4882cb1c6f44a8ff56c9168629c1a",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/09-equipamiento.png",
+      "title": "Equipamiento",
+      "context": "Histórica; menú original del recorrido de partida.",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 1104703,
+      "sha256": "e2c5723c1876560866de6c448064f89d3093b95756ffadf2b65e8b2fed153926",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/10-video-retina.png",
+      "title": "Selector de resolución 3024 × 1701",
+      "context": "Candidata final 1.1.4; captura reducida por el instrumento, no PNG Retina.",
+      "width": 1024,
+      "height": 576,
+      "bytes": 245574,
+      "sha256": "721ebf803c1db233d3ed72799da9fc0b9c94c9e347daabe476ac4b2b5a2bad59",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/11-video-pantalla-completa.png",
+      "title": "Pantalla completa con bordes",
+      "context": "App instalada 1.1.4; selección de modo, no prueba de un Space visible.",
+      "width": 1024,
+      "height": 576,
+      "bytes": 250613,
+      "sha256": "b830e4354e57769c0f925211f668f8569f34029f01382eef7b80f0940a8a6d69",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/12-cinematica-aerea.png",
+      "title": "Cinemática: vista aérea",
+      "context": "Candidata intermedia 1.1.4; anterior a la última validación de límites.",
+      "width": 1024,
+      "height": 576,
+      "bytes": 715724,
+      "sha256": "4077bc5b5cf0e2f6c15ebef7bd81e5c79d8f6a6e0bfb27162f9ae5a6f8a784bb",
+      "png_chunks": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ]
+    },
+    {
+      "file": "assets/screenshots/13-video-compilacion-publica.png",
+      "title": "Opciones del paquete compilado desde el pipeline público",
+      "context": "Implementación pública 5731727, ejecutable 835675db; lectura GPU con modo 1 y resolución 1280 × 720 aplicados. Space visible no certificado.",
+      "width": 3024,
+      "height": 1701,
+      "bytes": 1007763,
+      "sha256": "65a9c7260ddfd96ffede7ad633d956f937eb9f54c5143d04346e59f06fceed67",
+      "png_chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ]
+    },
+    {
+      "file": "assets/screenshots/14-partida-compilacion-publica.png",
+      "title": "Partida desde la app compilada por el pipeline público",
+      "context": "Implementación pública 5731727, ejecutable 835675db; QA de 80 s, cliente real Switch2Bridge con servidor sintético. Escena del prólogo; no certifica todos los niveles.",
+      "width": 3024,
+      "height": 1701,
+      "bytes": 3403833,
+      "sha256": "6b61f38f82c5bdc5c8933fcc4ad6ead7bd24206929455e91e462c11b591b5818",
+      "png_chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ]
+    }
+  ]
+}

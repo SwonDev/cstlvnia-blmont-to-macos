@@ -2,7 +2,7 @@
 
 Una contribución útil describe un problema reproducible, su causa, revisión de referencia, prueba ejecutada y límites. Las correcciones generales pertenecen preferentemente al upstream que mantiene ese componente. Antes de abrir PR, buscar duplicados y enlazar propuestas existentes.
 
-Para este cuaderno se aceptan casos originales, correcciones verificadas y mejoras de las plantillas. Distinguir medición local y afirmación de un tercero. Fijar versiones y enlazar fuentes primarias. No convertir una prueba parcial en soporte universal.
+Se aceptan correcciones del port, regresiones sintéticas, documentación de problemas y mejoras de las herramientas. Distinguir medición local y afirmación de un tercero. Fijar versiones y enlazar fuentes primarias. No convertir una prueba parcial en soporte universal.
 
 ## Material admisible
 
@@ -16,7 +16,8 @@ Revisar enlaces relativos, UTF-8, afirmaciones, contexto de capturas y consisten
 
 ```bash
 python3 scripts/verify_docs.py
-python3 -m unittest discover -s tests -v
+./build-macos.sh --stage test
+CASTLEVANIA_BUNDLE_NATIVE_TEST=1 private/venv/bin/python -m unittest discover -s tests -p test_macos_bundle.py -v
 ```
 
-Requiere Python 3.10 o posterior, sin paquetes externos. `PUBLIC_FILES.json` contiene el inventario aprobado; si se incorporasen imágenes tras resolver su publicación, un manifiesto de capturas debe fijar sus hashes. Cambiar el inventario exige revisión, no regeneración automática para esconder un fallo. El verificador comprueba enlaces locales e integridad y rechaza chunks PNG adicionales; no prueba los píxeles del juego, no consulta enlaces externos y no garantiza ausencia de secretos.
+El verificador documental no necesita paquetes externos. La suite completa requiere Python 3.12 o posterior y las herramientas del README. `PUBLIC_FILES.json` contiene el inventario aprobado; el manifiesto de las catorce capturas fija sus hashes y dimensiones. Cambiar el inventario exige revisión, no regeneración automática para esconder un fallo. El verificador comprueba enlaces locales e integridad y rechaza chunks PNG adicionales; no prueba los píxeles del juego, no consulta enlaces externos y no garantiza ausencia de secretos.

@@ -12,12 +12,12 @@ Switch 2 Pro Controller
     Switch2Bridge.app
       socket Unix: tramas de 20 bytes
         consumidor Wine/SDL del repo original
-        consumidor nativo específico de la adaptación local
+        consumidor nativo de este repositorio
 ```
 
-El README publicado del puente declara soporte probado en Wine y limita los juegos nativos. La adaptación local **no crea un mando virtual global**: su runtime consume directamente el socket. Esto añade compatibilidad a ese consumidor concreto; no demuestra que otros juegos nativos puedan usarlo ni modifica el alcance público del puente. No se desactivó SIP ni se añadieron entitlements de dispositivo virtual.
+El README publicado del puente declara soporte probado en Wine y limita los juegos nativos. Esta adaptación **no crea un mando virtual global**: su runtime consume directamente el socket. Esto añade compatibilidad a ese consumidor concreto; no demuestra que otros juegos nativos puedan usarlo ni modifica el alcance público del puente. No se desactivó SIP ni se añadieron entitlements de dispositivo virtual.
 
-## Contrato del consumidor usado en el caso
+## Contrato del consumidor incluido
 
 | Campo | Formato |
 |---|---|
@@ -28,7 +28,7 @@ El README publicado del puente declara soporte probado en Wine y limita los jueg
 | Gatillos | Dos UInt8 |
 | Estado | Conexión UInt8 y relleno UInt8 |
 
-Contrastar siempre la revisión del productor antes de implementar un cliente. El adaptador del caso conserva A/B/X/Y y glifos Nintendo, convierte el signo de Y para Horizon y neutraliza al perder foco, caducar tramas o desconectar. Reensambla lecturas fragmentadas, valida cabecera/estado y reconecta. La ruta o configuración del socket debe ser local; no publicar rutas personales.
+Contrastar siempre la revisión del productor antes de implementar un cliente. El adaptador incluido en `runtime/src/hle_hid.cpp` conserva A/B/X/Y y glifos Nintendo, convierte el signo de Y para Horizon y neutraliza al perder foco, caducar tramas o desconectar. Reensambla lecturas fragmentadas, valida cabecera/estado y reconecta. La ruta o configuración del socket debe ser local; no publicar rutas personales.
 
 ## Matriz de pruebas
 

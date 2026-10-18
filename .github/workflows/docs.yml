@@ -1,4 +1,4 @@
-name: Documentación y capturas
+name: Contratos del port y documentación
 on:
   push:
   pull_request:
@@ -12,4 +12,26 @@ jobs:
         with:
           persist-credentials: false
       - run: python3 scripts/verify_docs.py
-      - run: python3 -m unittest discover -s tests -v
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --require-hashes -r requirements.txt
+      - run: python -m unittest discover -s tests -p '*test*.py' -v
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - run: brew install cmake ninja sdl3 molten-vk vulkan-headers vulkan-loader
+      - run: python -m pip install --require-hashes -r requirements.txt
+      - run: cmake -S . -B private/build-tests -G Ninja -DNX_TESTS=ON -DNX_BUILD_GAME=OFF
+      - run: cmake --build private/build-tests -j 3
+      - run: ctest --test-dir private/build-tests --output-on-failure
+      - run: python -m unittest discover -s tests -p '*test*.py' -v
+        env:
+          CASTLEVANIA_BUNDLE_NATIVE_TEST: '1'

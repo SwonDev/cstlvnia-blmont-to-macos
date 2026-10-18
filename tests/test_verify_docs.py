@@ -32,6 +32,16 @@ class DocumentChecks(unittest.TestCase):
             self.make_repository(root)
             self.assertEqual(verify(root), (1, 0, 0))
 
+    def test_private_inputs_are_not_traversed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_repository(root)
+            private = root / "private"
+            private.mkdir()
+            (private / "own-data.bin").write_bytes(b"privado sintetico")
+            (private / "outside").symlink_to(root.parent)
+            self.assertEqual(verify(root), (1, 0, 0))
+
     def test_image_without_manifest_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

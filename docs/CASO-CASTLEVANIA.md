@@ -1,6 +1,6 @@
 # Caso técnico: Castlevania en Apple silicon
 
-Adaptación local de contenido 1.1.0, paquete macOS 1.1.4. Base del runtime: [SuperMarioWonderRecomp, revisión 010ed7a](https://github.com/BelmanteGu/SuperMarioWonderRecomp/tree/010ed7a596a621c15d3a8dfa5795ca8c3668b066). No se atribuye al upstream compatibilidad previa con este título. Este documento comparte los hallazgos; la implementación y los recursos privados no se distribuyen aquí.
+Adaptación local de contenido 1.1.0, paquete macOS 1.1.4. Base del runtime: [SuperMarioWonderRecomp, revisión 010ed7a](https://github.com/BelmanteGu/SuperMarioWonderRecomp/tree/010ed7a596a621c15d3a8dfa5795ca8c3668b066). No se atribuye al upstream compatibilidad previa con este título. Este documento conserva los resultados históricos de la adaptación. La implementación se distribuye ahora en este repositorio; los recursos del juego los aporta cada usuario. Consulta la [compilación](../README.md) y la [procedencia](../UPSTREAM.md).
 
 ## De carga a imagen
 
@@ -46,7 +46,7 @@ Los selectores originales de Unity existían, pero requerían opciones válidas,
 | Guardado | Identidad estable y tiempo creciente, fecha corregida | Punto inicial del prólogo; falta otro punto posterior. |
 | Hardware y ventana | Usuario confirmó buena jugabilidad; automatización nativa no disponible | Altavoces, mando físico y Space no certificados por esas pruebas. |
 
-La automatización de ventana falló con `native pipe startup failed`; no se reinició la sesión del usuario ni se alteraron permisos para sortearla. La página de la [galería](GALERIA.md) explica la selección local y su publicación pendiente; sus capturas conservadas distinguen resultados históricos de la candidata final.
+La automatización de ventana falló con `native pipe startup failed`; no se reinició la sesión del usuario ni se alteraron permisos para sortearla. La página de la [galería](GALERIA.md) presenta las catorce capturas publicadas; sus leyendas distinguen resultados históricos de la candidata final.
 
 ## Identidad de referencia
 
@@ -59,4 +59,4 @@ SHA-256 sello CodeResources:
 cb40c187dca13230086a192fb60c710ae8bab206259657e37262d344e02d376d
 ```
 
-Son identificadores del artefacto privado observado, no enlaces de descarga. Los números proceden de informes locales fechados el 18 de octubre de 2026. Publicamos un resumen técnico; al no incluir el binario, las entradas ni todos los logs, estos resultados no son una ejecución reproducible desde este repositorio.
+Son identificadores del artefacto privado observado, no enlaces de descarga. Los números proceden de informes locales fechados el 18 de octubre de 2026. Estos resultados históricos no sustituyen una ejecución propia. El repositorio permite generar una nueva candidata desde fuentes y entradas propias; su identidad diferirá de este artefacto privado de referencia. Los logs completos, guardados y recursos comerciales permanecen privados.
