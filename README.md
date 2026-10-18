@@ -1,75 +1,87 @@
-# Castlevania Belmont’s Curse for macOS
+# Castlevania Belmont’s Curse para macOS
 
-[![Pruebas del port](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml)
+[![Contratos del port](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml)
 
-Port no oficial de **Castlevania: Belmont’s Curse** para **macOS en Apple silicon**. Incluye el recompilador AArch64 → C++, el runtime adaptado, la capa gráfica NVN → Vulkan/MoltenVK, las adaptaciones del juego y las herramientas para construir una app local a partir de tu propia copia.
+**Tu propia copia de Castlevania: Belmont’s Curse, convertida en una app local para Apple silicon.** Este proyecto reúne las fuentes, las adaptaciones y el proceso utilizado para instalar y jugar en Mac: interfaz original en español, cinemáticas, audio, salida Retina y mando Switch 2 Pro mediante Switch2Bridge.
 
-Repositorio: [SwonDev/cstlvnia-blmont-to-macos](https://github.com/SwonDev/cstlvnia-blmont-to-macos). Contenido compatible: **1.1.0**; versión del paquete local: **1.1.4**. Los build ID y hashes admitidos están en [games/castlevania/build.json](games/castlevania/build.json). Un ExeFS de otra revisión se rechaza antes de generar código. RomFS debe proceder de la misma 1.1.0: se exige `Data/` al preparar y se contrasta el conjunto requerido de shaders después; ese inventario no valida todos los recursos del juego.
+**Apple silicon · Contenido 1.1.0 · App 1.1.4 · Código MIT · Aporta tus archivos del juego**
 
-**El repositorio no incluye el juego ni una app descargable.** Debes aportar ExeFS, RomFS e icono de Control de tu propia copia. El código AOT, los programas SPIR-V derivados del juego, los paquetes, las entradas y los logs permanecen en `private/`. No se publican ROM, claves, firmware ni partidas. Las capturas documentales conservan los derechos de sus titulares y están excluidas de MIT.
+[Compilar e instalar](#compilar-e-instalar) · [Pantalla y resolución](#pantalla-y-resolución) · [Mando](#mando-switch-2-pro) · [Cómo se consiguió](#cómo-se-consiguió) · [Galería](docs/GALERIA.md) · [Metodología completa](docs/METODOLOGIA.md)
 
-![Partida y HUD originales de Castlevania](assets/screenshots/14-partida-compilacion-publica.png)
+![Trevor en el prólogo, con escenario y HUD originales, desde la app compilada con el pipeline público](assets/screenshots/14-partida-compilacion-publica.png)
 
-*Lectura GPU del prólogo en la app generada por el pipeline público. [Galería de catorce capturas: doce históricas y dos de esta construcción](docs/GALERIA.md).*
+| Cinemáticas y subtítulos | Diálogos e interfaz originales |
+|:---:|:---:|
+| ![Ciudad en llamas y subtítulos en español](assets/screenshots/02-cinematica-ciudad.png) | ![Diálogo del prólogo con los personajes](assets/screenshots/04-dialogo.png) |
 
-## Estado de la construcción pública
+Las imágenes son lecturas GPU de las pruebas locales. La [galería](docs/GALERIA.md) identifica qué versión produjo cada una; las capturas históricas ilustran el recorrido y no sustituyen la validación de la candidata actual.
 
-La adaptación privada anterior mostró menú, cinemáticas, prólogo, HUD, diálogo, equipamiento y opciones originales. Esta publicación incorpora su código y sustituye las rutas del workspace privado por una preparación explícita de entradas propias.
+## La experiencia en Mac
 
-| Frontera | Estado verificado al 18 de octubre de 2026 |
+El resultado es un bundle `.app` con icono, recursos y dependencias internas. Se abre desde Finder y conserva el lenguaje visual del juego: menús, HUD, diálogos, arcanos, equipamiento y opciones originales. Sus datos modificables se guardan fuera del bundle.
+
+| Área | Adaptación incluida |
 |---|---|
-| Runtime y contratos | 33 CTest y 9.744 estados de instrucciones contra Unicorn ejecutados de nuevo en la revisión pública. Son pruebas acotadas. |
-| Generación AOT | Regenerada desde las entradas locales para `main`, `sdk` y `subsdk0`. No se publica el resultado generado. |
-| Shaders desde cero | 5.000 programas inventariados; 4.999 SPIR-V válidos. Los 4.774 de la caché histórica coinciden byte por byte; hay 225 válidos adicionales. |
-| Límite del traductor | Un programa geometry no está soportado. No se declara que carezca de uso en todo el juego. |
-| Build completo desde el pipeline público | Terminado desde las entradas propias; 33 CTest y suite de 72 pruebas Python sin fallos (una omitida). |
-| App generada por ese pipeline | Empaquetada, firmada e instalada en QA aislada. Recorrido de vídeo de 165 s, 1.130 muestras sin alternancias detectadas, recarga en frío y otros 80 s de partida observada. |
-| Revalidación del registro de memoria | Nueva app de `7bb7f5d`: otros 166,6 s, 1.116 fotogramas sin alternancias fuertes y recarga de 20,3 s. Contratos locales sin fallos. |
-| CI en otro host | Linux pasa. El runner macOS 26 M1 pasa 32/33 CTest y rechaza un rango ocupado por el allocator del sistema. Compatibilidad de ese host pendiente; [ejecución y diagnóstico](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39156879599). |
+| Juego | Programa AArch64 recompilado a C++ y ejecutable nativo arm64; servicios del sistema proporcionados por el runtime. |
+| Gráficos | NVN sobre Vulkan/MoltenVK; shaders traducidos localmente desde tus archivos. |
+| Cinemáticas y sonido | Decodificación, presentación y audio del juego; correcciones de formato, sincronización y ABI documentadas. |
+| Vídeo | Resolución seleccionable, ventana, maximización y pantalla completa de escritorio. |
+| Entrada | Cliente Switch2Bridge y teclado del runtime; conserva glifos y disposición Nintendo. |
+| Instalación | Paquete autónomo, firma ad hoc e instalación nueva en una carpeta de aplicaciones libre. |
 
-Los informes AOT conservan tres instrucciones estáticas sin implementar (dos `mov` en `main` y una `stg` en `sdk`); su presencia limita la cobertura y no se presenta como soporte completo de todas las rutas.
+| Equipamiento | Arcanos |
+|:---:|:---:|
+| ![Arsenal, equipamiento y reliquias originales](assets/screenshots/09-equipamiento.png) | ![Menú de arcanos con Llama maldita](assets/screenshots/08-arcanos.png) |
 
-El empaquetador tiene pruebas con entradas propias pequeñas, herramientas reales de macOS, firma estricta y carga de SDL3/MoltenVK después de mover el bundle. Eso verifica el empaquetado, no sustituye la prueba del juego. La [validación pública](docs/VALIDACION.md) detalla las ejecuciones de esta candidata. Los recorridos históricos, sus límites y el método están en [docs/CASO-CASTLEVANIA.md](docs/CASO-CASTLEVANIA.md) y [docs/METODOLOGIA.md](docs/METODOLOGIA.md).
+## Pantalla y resolución
 
-## Requisitos
+El menú original **Vídeo** permite seleccionar resolución y modo de ventana, aplicar o descartar cambios. La salida nativa mantiene la proporción 16:9: un panel de 3024 × 1964 usa un lienzo de **3024 × 1701**. Los píxeles renderizados y los puntos de la ventana son medidas distintas.
 
-- Mac con Apple silicon y herramientas de Xcode, incluido el SDK de macOS.
-- Python **3.12 o posterior**, CMake y Ninja.
-- SDL3, MoltenVK, cabeceras y loader de Vulkan, SPIRV-Tools (`spirv-val`).
-- SDK **.NET 10** para compilar el traductor de shaders.
-- Espacio para los datos propios, el C++ generado, los objetos de compilación y una copia de recursos dentro de la app. La generación y compilación son costosas; empieza con cuatro trabajos paralelos.
+| Resolución nativa ajustada a 16:9 | Pantalla completa de escritorio |
+|:---:|:---:|
+| ![Selector original con resolución 3024 por 1701](assets/screenshots/10-video-retina.png) | ![Selector original de pantalla completa con bordes](assets/screenshots/11-video-pantalla-completa.png) |
 
-Con Homebrew ya instalado:
+SDL/AppKit gestiona ventana, maximización y pantalla completa. El modo exclusivo de Windows se adapta al modo de escritorio de macOS. El menú **Vídeo** de la barra de menús muestra además la salida en píxeles. Las películas conservan el detalle de su resolución de origen.
+
+## Mando Switch 2 Pro
+
+La integración utiliza **[SwonDev/Switch2Bridge](https://github.com/SwonDev/Switch2Bridge)**, el proyecto del puente que ya existe, y su consumidor nativo en este runtime.
+
+1. Instala y configura el puente siguiendo su README.
+2. Conecta el mando y comprueba que el puente recibe eventos.
+3. Abre el juego: el cliente consume sus tramas y conserva los botones y glifos Nintendo.
+
+Este perfil usa Switch2Bridge y teclado; el mando SDL genérico no es una alternativa habilitada. El consumidor no instala un dispositivo virtual global ni requiere desactivar SIP. La vibración y la cobertura completa de botones físicos están pendientes. [Configuración, protocolo y alcance de las pruebas](docs/SWITCH2BRIDGE.md).
+
+## Compilar e instalar
+
+### 1. Preparar el Mac
+
+Necesitas Apple silicon, Xcode con SDK de macOS, Python 3.12 o posterior, CMake, Ninja y SDK .NET 10. Con Homebrew ya instalado:
 
 ```sh
 xcode-select --install
 brew install python@3.12 cmake ninja sdl3 molten-vk vulkan-headers vulkan-loader spirv-tools dotnet
-```
 
-La versión mínima de macOS de la app depende de los componentes que empaquetes: se toma el mayor `minos` de su ejecutable, SDL3 y MoltenVK. En el build local final, el ejecutable y SDL3 3.4.18 exigen **macOS 27**; MoltenVK 1.4.2 admite 12. No se promete compatibilidad con sistemas anteriores sin construir y probar las dependencias correspondientes.
-
-## Construir con tu propia copia
-
-Clona las fuentes y comprueba las herramientas:
-
-```sh
 git clone https://github.com/SwonDev/cstlvnia-blmont-to-macos.git
 cd cstlvnia-blmont-to-macos
 ./build-macos.sh --doctor
 ./build-macos.sh --stage test --jobs 4
 ```
 
-Ejecuta los contratos antes de generar el AOT: también comprueban los rangos de memoria de este perfil. Si aparece «reserva de rango del juego», ese host no supera la comprobación; no continúes con la compilación costosa ni fuerces mapas sobre memoria ocupada. La prueba en macOS 27 de este proyecto pasa, pero el runner M1 descrito arriba todavía falla. `--doctor` comprueba herramientas, no esa compatibilidad.
+Los contratos comprueban el host antes de generar los archivos grandes. El mínimo de la app se calcula al empaquetar a partir del ejecutable, SDL3 y MoltenVK: en la construcción local verificada es **macOS 27**. Una prueba de contratos en otro sistema no acredita por sí sola que el juego completo funcione allí.
 
-Prepara estos tres argumentos; el repositorio no obtiene ni descifra el contenido por ti:
+### 2. Aportar tu copia 1.1.0
 
-| Entrada | Qué debe contener |
+| Argumento | Entrada local |
 |---|---|
-| `--exefs` | Directorio ExeFS descifrado con los NSO `main`, `sdk` y `subsdk0` de 1.1.0. |
-| `--romfs` | Raíz de RomFS descifrado, que contiene `Data/`; no indicar directamente esa subcarpeta. |
-| `--icon` | Imagen del icono de tu Control/NACP. Se convierte localmente a `.icns`; no hay un icono comercial embebido. |
+| `--exefs` | Directorio descifrado con `main`, `sdk` y `subsdk0` de la revisión 1.1.0. |
+| `--romfs` | Raíz de RomFS, con `Data/` dentro; no apuntar directamente a esa subcarpeta. |
+| `--icon` | Imagen del icono de Control/NACP de tu copia; se convierte localmente a `.icns`. |
 
-Ejecuta el pipeline completo para compilar e instalar una app nueva en `~/Applications` (omite `--install` si prefieres dejarla en `private/dist/`):
+Los [build ID y hashes admitidos](games/castlevania/build.json) se comprueban antes del AOT. RomFS debe corresponder a esa misma revisión: se contrasta su raíz y el conjunto requerido de shaders, no todos sus recursos. El repositorio no obtiene ni descifra el juego.
+
+### 3. Construir la app
 
 ```sh
 ./build-macos.sh \
@@ -82,73 +94,120 @@ Ejecuta el pipeline completo para compilar e instalar una app nueva en `~/Applic
   --install
 ```
 
-`--language` admite `es`, `en` y `ja`; selecciona el idioma del juego sin añadir traducciones externas. El entorno Python se crea en `private/venv/` con dependencias fijadas y hashes. La fuente MIT del traductor se descarga a `private/third_party/` desde una revisión y un archivo con SHA-256 fijados; no se descarga ningún recurso del juego. Consulta [UPSTREAM.md](UPSTREAM.md).
+La salida instalada es **`~/Applications/Castlevania Belmont’s Curse.app`**. Ábrela desde Finder. Sin `--install`, queda en `private/dist/`. El instalador exige un destino nuevo y conserva las instalaciones y partidas existentes.
 
-La preparación registra las rutas locales en `private/input.json`, extrae las imágenes de los NSO a `private/castlevania/analysis/` y crea un enlace gestionado hacia tu RomFS. Conserva ese RomFS disponible y no cambies de revisión bajo el mismo checkout. Las siguientes etapas reutilizan la configuración; `--language` tiene por defecto `es`, así que repítelo si elegiste otro idioma.
+El pipeline prepara entradas → genera AOT → traduce shaders → compila → ejecuta pruebas → empaqueta y firma. El C++ generado, objetos y recursos ocupan varios GB; empieza con cuatro trabajos paralelos. El entorno Python y el traductor se preparan en `private/`, con dependencias, revisión de fuentes y hashes fijados. [Procedencia y licencias](UPSTREAM.md).
 
-## Ejecutar por etapas y revisar fallos
+<details>
+<summary>Reanudar por etapas, elegir idioma y cambiar el destino</summary>
 
 ```sh
 ./build-macos.sh --stage prepare --exefs "/ruta/a/tu/ExeFS" --romfs "/ruta/a/tu/RomFS" --icon "/ruta/a/tu/icono-Control.dat"
 ./build-macos.sh --stage generate --jobs 4
 ./build-macos.sh --stage shaders --jobs 4
 ./build-macos.sh --stage build --jobs 4
-./build-macos.sh --stage package
+./build-macos.sh --stage package --install-dir "$HOME/Applications"
 ```
 
 | Etapa | Resultado |
 |---|---|
-| `prepare` | Valida revisión e imágenes; prepara datos privados y el idioma. |
-| `generate` | Genera C++ AOT para los tres módulos, con excepciones y el perfil de resolución. |
-| `shaders` | Descubre, traduce y valida programas desde ExeFS/RomFS propios. |
-| `build` | Reutiliza o genera AOT, compila con CMake/Ninja y ejecuta las pruebas. No ejecuta la etapa de shaders. |
-| `package` | Empaqueta el ejecutable y la caché ya preparados, con recursos internos y firma ad hoc. |
-| `test` | Construye y ejecuta contratos CTest y pruebas Python sin aportar datos comerciales. |
-| `all` | Preparación, AOT, shaders, compilación, pruebas y paquete, en ese orden. |
+| `prepare` | Valida revisión, extrae imágenes NSO y prepara el idioma y un enlace gestionado a RomFS. |
+| `generate` | Genera C++ para los tres módulos, con excepciones y perfil del juego. |
+| `shaders` | Descubre, traduce y valida programas de ExeFS/RomFS. |
+| `build` | Reutiliza o genera AOT, compila y ejecuta CTest/Python; no traduce shaders. |
+| `package` | Empaqueta ejecutable y recursos ya preparados en una app nueva. |
+| `test` | Ejecuta los contratos y pruebas Python sin datos comerciales. |
 
-Para ejecutar sólo los contratos:
+Las rutas se guardan en `private/input.json`; conserva el RomFS disponible. `--language` admite `es`, `en` y `ja`, con `es` por defecto: repítelo al reanudar si elegiste otro idioma. No se añaden traducciones externas.
 
-```sh
-./build-macos.sh --stage test --jobs 4
-```
+La caché de shaders y la salida de paquete deben ser nuevas. No repitas `all` o `package` sobre una candidata existente: reanuda la etapa necesaria y conserva la app anterior, o utiliza otro checkout. El empaquetador directo admite otro `--output` bajo `private/`.
 
-Una etapa fallida no equivale a una app terminada. Conserva la salida de la herramienta y los informes privados de shaders; no copies una caché anterior para ocultar un fallo de traducción. `--help` muestra las opciones de la revisión que tengas instalada:
+Si ya ejecutaste `all` sin instalar, mueve la app terminada desde `private/dist/` con Finder a una carpeta de aplicaciones libre. `--install-dir` también solicita instalación y rechaza destinos simbólicos o una app ya existente. La firma es ad hoc local, sin notarización. Los datos modificables usan `SDL_GetPrefPath("SwonDev", "castlevania")`; no se importan partidas del workspace privado.
 
 ```sh
 ./build-macos.sh --help
 python3.12 scripts/macos_bundle.py --help
 ```
 
-## Paquete e instalación opcional
+</details>
 
-La salida predeterminada es `private/dist/Castlevania Belmont’s Curse.app`, con identificador `dev.swondev.castlevania` y versión 1.1.4. Incluye los recursos aportados, el icono, SDL3, MoltenVK y sus avisos de licencia, además de los de SuperMarioWonderRecomp, Ryubing y FidelityFX. El empaquetador ajusta las dependencias a rutas internas y ejecuta `codesign --verify --deep --strict`. La firma es local ad hoc; no constituye notarización de Apple.
+## Cómo se consiguió
 
-La construcción sin `--install` no instala. Si sólo has ejecutado la etapa `build` y todavía no existe una app en `private/dist/`, puedes empaquetar e instalar así:
+El objetivo fue reproducir el comportamiento del juego en una app macOS y guardar cada causa y comprobación para el siguiente proyecto. El [caso Castlevania](docs/CASO-CASTLEVANIA.md) detalla los recorridos; el [método completo](docs/METODOLOGIA.md) recoge las fases, experimentos, empaquetado, privacidad y limpieza.
 
-```sh
-./build-macos.sh --stage package --install-dir "$HOME/Applications"
+| Frontera | Trabajo realizado |
+|---|---|
+| Programa y sistema | Identificar módulos y revisión; adaptar carga, inicializadores, importaciones, memoria, servicios e instrucciones. Mantener pruebas del comportamiento original. |
+| Shaders y fondos | Descubrir recursos Unity también sin extensión; conservar metadatos, traducir variantes y validar el inventario requerido completo. |
+| Audio y películas | Comprobar ABI, frecuencia, canales, muestras, planos y recorte; separar señal PCM medida de escucha real. |
+| Transiciones | Localizar el primer fotograma divergente; corregir orden de copias y preparación del índice de animación antes de publicar el material. |
+| Vídeo y entrada | Exponer los selectores originales, respetar aplicar/descartar y persistencia; integrar el cliente real Switch2Bridge con pruebas aisladas. |
+| App y reproducción | Firmar antes de probar, cargar recursos internos desde fuera del checkout, preservar partidas y construir de nuevo desde las fuentes públicas. |
+
+```mermaid
+flowchart LR
+    F["Tus archivos 1.1.0"] --> A["Recompilación AArch64 → C++"]
+    F --> S["Traducción de shaders → SPIR-V"]
+    A --> R["Runtime macOS + SDL3"]
+    S --> G["NVN → Vulkan / MoltenVK"]
+    R --> P["App local arm64"]
+    G --> P
 ```
 
-`--install` sin directorio utiliza también `~/Applications`. El instalador mueve únicamente la app nueva y rechaza una app ya existente o un destino simbólico; no sustituye una instalación previa ni modifica sus partidas. La salida privada debe ser nueva: si ya existe una candidata, consérvala y usa otro `--output` con `scripts/macos_bundle.py`, o un checkout independiente. Los metadatos y logs del paquete permanecen en `private/`.
+### Pruebas y alcance
 
-Si ya ejecutaste `all` sin instalar, la app terminada está en `private/dist/`: puedes moverla con Finder a una carpeta de aplicaciones libre. No repitas `package` sobre ese mismo destino. Abre la app desde Finder una vez creada. Los recursos se leen dentro del bundle; los datos modificables de la app empaquetada se guardan mediante `SDL_GetPrefPath("SwonDev", "castlevania")`, fuera de éste. No se importan automáticamente partidas del workspace privado. Una app construida con tu copia contiene datos del juego: no la adjuntes a releases, issues o PR.
+El pipeline público se construyó desde entradas propias nuevas, sin reutilizar el AOT ni la caché comercial de la instalación previa. La [validación](docs/VALIDACION.md) identifica revisiones, ejecutables y recursos de cada candidata.
 
-## Vídeo, Retina y controles
+| Comprobación | Evidencia |
+|---|---|
+| Contratos locales | 33 CTest; suite de 72 pruebas Python, una nativa opcional omitida en esa ejecución. |
+| Instrucciones | 58 formas y 9.744 estados contrastados con Unicorn. |
+| Shaders | 5.000 inventariados, 4.999 SPIR-V válidos y los 4.774 requeridos completos. |
+| Empaquetado | 22 pruebas, incluida firma y carga relocalizada de SDL3/MoltenVK con herramientas reales. |
+| Recorrido | Partida, HUD, menú de vídeo, cambios de resolución, audio PCM y recarga en perfiles QA separados. |
+| GitHub | [macOS 26 M1 y Linux pasan](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39158560322); en Mac, 33 CTest y 72 pruebas Python, incluido empaquetado nativo. |
 
-El port mantiene los menús, textos y widgets originales. El selector de resolución ofrece modos 16:9 válidos y una opción nativa ajustada al panel: por ejemplo, un panel de 3024 × 1964 usa un lienzo de **3024 × 1701**. Los puntos de ventana, los píxeles Retina y la resolución interna son magnitudes distintas. El vídeo original conserva su resolución de origen.
+Las pruebas de GitHub ejecutan contratos sin el juego. Su estado real está en la insignia superior y los detalles de cada ejecución. El diagnóstico de memoria del runner M1 y la validación de su corrección se registran en [VALIDACION](docs/VALIDACION.md).
 
-Los ajustes originales conservan aplicar, descartar y cerrar. El modo exclusivo reservado a Windows se adapta a pantalla completa de escritorio en macOS; ventana, maximización y pantalla completa nativa se gestionan por SDL/AppKit. El menú **Vídeo** de macOS muestra la salida en píxeles y permite cambiar el modo de ventana. Una lectura GPU o una prueba headless no certifica por sí sola un Space visible.
+Quedan un programa geometry y tres instrucciones AOT estáticas sin soporte completo. Las pruebas finitas no recorren todos los niveles ni acreditan escucha por altavoces, vibración o todos los botones físicos. No se publica una app binaria: el usuario la construye con sus propios archivos.
 
-Este perfil utiliza el consumidor Switch2Bridge y la entrada de teclado del runtime, conservando posiciones y glifos Nintendo. El mando SDL genérico no está habilitado como alternativa en este perfil. Para el Switch 2 Pro se integra directamente [SwonDev/Switch2Bridge](https://github.com/SwonDev/Switch2Bridge); usa las instrucciones de ese proyecto para el puente. Este consumidor no instala un mando virtual global ni requiere desactivar SIP. La vibración del consumidor nativo y la cobertura completa de botones físicos siguen pendientes. [Protocolo y pruebas](docs/SWITCH2BRIDGE.md).
+<details>
+<summary>Más capturas: menú, opciones, prólogo y cinemáticas</summary>
 
-## Código, método y créditos
+| Menú | Opciones de la construcción pública |
+|:---:|:---:|
+| ![Menú principal original en español](assets/screenshots/01-menu.png) | ![Menú de vídeo del paquete generado desde las fuentes públicas](assets/screenshots/13-video-compilacion-publica.png) |
 
-- [UPSTREAM.md](UPSTREAM.md): base fijada, traductor y fronteras de procedencia.
-- [CREDITS.md](CREDITS.md): autores, herramientas, licencias y titulares del juego.
-- [docs/GALERIA.md](docs/GALERIA.md): catorce capturas contextualizadas, históricas y del nuevo paquete.
-- [docs/METODOLOGIA.md](docs/METODOLOGIA.md): método de adaptación y validación.
-- [CONTRIBUTING.md](CONTRIBUTING.md): cómo aportar causas, pruebas y límites sin material privado.
+| Trevor | Escenario |
+|:---:|:---:|
+| ![Trevor durante la cinemática inicial](assets/screenshots/03-cinematica-trevor.png) | ![Composición del río y la ciudad al fondo](assets/screenshots/05-escenario.png) |
 
-La base es **SuperMarioWonderRecomp**, de BelmanteGu y contribuidores, bajo MIT. **D2R Mobile**, de jhaizhou-ops y contribuidores, fue el antecedente del método; no es la base del runtime de este port. Su [PR #87](https://github.com/jhaizhou-ops/d2r-mobile/pull/87) se cita como trabajo relacionado y no implica aprobación upstream.
+| Partida | Tutorial |
+|:---:|:---:|
+| ![Personaje en el muelle y HUD](assets/screenshots/06-partida-hud.png) | ![Tutorial de salto con los glifos originales](assets/screenshots/07-tutorial.png) |
 
-El código del proyecto y las modificaciones originales se publican bajo [MIT](LICENSE), respetando las licencias de terceros. **Castlevania: Belmont’s Curse**, su contenido, imágenes y marcas pertenecen a KONAMI y a los demás titulares indicados por el juego. Las capturas se incluyen para documentar la adaptación y quedan excluidas de MIT. Proyecto independiente, sin afiliación, patrocinio ni aprobación de KONAMI, Nintendo o Apple. [Sitio oficial del juego](https://www.konami.com/games/castlevania/belmonts_curse/eu/en/).
+![Vista aérea de la ciudad durante la cinemática](assets/screenshots/12-cinematica-aerea.png)
+
+[Galería completa con contexto, dimensiones y procedencia](docs/GALERIA.md).
+
+</details>
+
+## Documentación y contribuciones
+
+| Documento | Para qué sirve |
+|---|---|
+| [Metodología](docs/METODOLOGIA.md) | Repetir el proceso en otros proyectos y registrar las causas. |
+| [Caso Castlevania](docs/CASO-CASTLEVANIA.md) | Entender las adaptaciones y los recorridos de este juego. |
+| [Validación](docs/VALIDACION.md) | Contrastar resultados e identidades de las apps probadas. |
+| [Switch2Bridge](docs/SWITCH2BRIDGE.md) | Configurar y entender la entrada del mando. |
+| [Procedencia](UPSTREAM.md) y [créditos](CREDITS.md) | Consultar autores, revisiones y licencias. |
+| [Contribuir](CONTRIBUTING.md) | Proponer mejoras con pruebas y sin adjuntar material privado. |
+| [Entrega y privacidad](docs/ENTREGA-Y-PRIVACIDAD.md) | Revisar qué puede formar parte del repositorio. |
+
+## Créditos y licencia
+
+La base del runtime es **[SuperMarioWonderRecomp](https://github.com/BelmanteGu/SuperMarioWonderRecomp)**, de BelmanteGu y contribuidores. El traductor utiliza una revisión fijada de **Ryubing**. **[D2R Mobile](https://github.com/jhaizhou-ops/d2r-mobile)**, de jhaizhou-ops y contribuidores, es el antecedente de la metodología y la referencia de presentación; su [PR #87](https://github.com/jhaizhou-ops/d2r-mobile/pull/87) acredita el trabajo relacionado. La entrada del mando integra **[Switch2Bridge](https://github.com/SwonDev/Switch2Bridge)**. Las revisiones y avisos de terceros están en [UPSTREAM.md](UPSTREAM.md).
+
+Código original del proyecto y modificaciones bajo [MIT](LICENSE). **Castlevania: Belmont’s Curse**, su contenido, imágenes y marcas pertenecen a KONAMI y a los demás titulares identificados por el juego. Las capturas documentales están excluidas de MIT. Proyecto independiente, sin afiliación ni aprobación de KONAMI, Nintendo o Apple.
+
+No se publican ROM, claves, firmware, partidas, AOT, SPIR-V derivados del juego ni paquetes de recursos. Las entradas, artefactos y logs se quedan en `private/`. Una app construida con tu copia contiene recursos del juego: no la adjuntes a releases, issues o PR.

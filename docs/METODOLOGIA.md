@@ -121,4 +121,8 @@ La reserva del perfil falló en el runner macOS M1: regiones del allocator del h
 
 El proceso nuevo conserva los seis rangos y los commits al principio/final; el padre mantiene páginas parciales, vecinos y memoria ajena. No se desactiva el test ni se relaja el criterio que protege mapas ocupados de macOS. El diagnóstico acotado informa de protección, límite de protección y tag. Verificar el resultado en el host que falló antes de atribuir al cambio la resolución de esa colisión.
 
+La solución de este caso fue adelantar la reserva al cargador mediante un segmento Mach-O ordinario, zerofill y sin acceso: `__GUEST` cubre 15–60 GiB más el slide. No es `PAGEZERO`, no eleva el mínimo del mapa y no ocupa 45 GiB de disco o RAM física. El tamaño deja los rangos invitados dentro y `__LINKEDIT` por debajo de la guarda del sistema de 63 GiB. Los probes demasiado grandes no arrancaban y se descartaron. El runtime verifica pertenencia al segmento real con ASLR antes de inspeccionar cada región; si no hay cobertura, rechaza la operación.
+
+La regresión mantiene memoria del allocator viva mientras reserva los seis rangos y verifica que sus bytes no cambian. La [CI que antes fallaba pasa con la corrección](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39158560322). Repetir arranques para variar ASLR complementa la prueba; no sustituye el chequeo de cobertura en cada proceso ni acredita una partida en ese host.
+
 Leer los fallos de cada job de CI por separado. Un `tail` del log global puede mostrar sólo macOS y ocultar otro fallo de Linux. La insignia del README enlaza el estado real del workflow; las ejecuciones sin datos comerciales acreditan contratos, no una partida completa.

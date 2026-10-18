@@ -32,6 +32,8 @@ jobs:
       - run: cmake -S . -B private/build-tests -G Ninja -DNX_TESTS=ON -DNX_BUILD_GAME=OFF
       - run: cmake --build private/build-tests -j 3
       - run: ctest --test-dir private/build-tests --output-on-failure
+      - name: Diez arranques con ASLR y memoria del host viva
+        run: ctest --test-dir private/build-tests -R '^mac_memory$' --repeat until-fail:10 --output-on-failure
       - run: python -m unittest discover -s tests -p '*test*.py' -v
         env:
           CASTLEVANIA_BUNDLE_NATIVE_TEST: '1'

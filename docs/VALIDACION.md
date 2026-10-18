@@ -45,7 +45,26 @@ c222c3aa8ae3c1107c06ef639180c32d8a5101572826a165a85eebe2f0b37153
 
 El recorrido adicional duró 166,6 s y conservó ocho PNG. Se observaron partida con Trevor, fondos y HUD, y el menú original con 1280 × 720; 1.116 fotogramas medidos no mostraron alternancias ABA/ABCA fuertes. No hubo errores fatales ni shaders ausentes. PCM: 120 s, 48 kHz estéreo, pico 9.338 y cero muestras saturadas. Recursos internos y directorio de ejecución ajeno al checkout. Otra recarga de 20,3 s recuperó el perfil QA, sin errores ni shaders ausentes. Las capturas públicas 13–14 siguen perteneciendo al primer paquete identificado arriba.
 
-La [CI de esa revisión](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39156879599) pasa en Linux, pero **falla en macOS 26 M1**: 32/33 CTest pasan; `mac_memory` rechaza un rango con dos regiones de 4 MiB `VM_MEMORY_MALLOC_SMALL`. La separación del test en un proceso nuevo y el registro sin allocator no resuelven esa colisión. No se ha certificado ese host ni se ha cambiado el test para ocultarla. El guard sólo intercepta `operator new`, no el allocator interno de macOS. Se conserva el rechazo de mapas ocupados. Ejecutar `--stage test` antes del AOT permite detectar este límite sin generar los artefactos grandes.
+La [CI de esa revisión anterior](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39156879599) pasó en Linux, pero falló en macOS 26 M1: 32/33 CTest pasaron; `mac_memory` rechazó un rango con dos regiones de 4 MiB `VM_MEMORY_MALLOC_SMALL`. La separación del test en un proceso nuevo y el registro sin allocator no bastaron. El guard de `operator new` no intercepta el allocator interno de macOS. Este resultado motivó la corrección siguiente.
+
+## Corrección verificada en el runner M1
+
+La revisión `c2d6e35` incorpora un segmento Mach-O ordinario `__GUEST`, zerofill, de 45 GiB desde 15 GiB: protección inicial y máxima cero, sin contenido en disco. El cargador lo reserva antes de las asignaciones de libSystem. Se aplica al juego y al test. Las direcciones invitadas y el AOT conservan su disposición.
+
+Antes de sustituir un subrango, el runtime exige pertenencia a ese segmento del ejecutable actual tras ASLR y comprueba que la región siga sin acceso, protección máxima ni tag. El test verifica los seis rangos, mantiene vivos 16 MiB de asignaciones del host y contrasta después sus bytes. La regresión falla con código 22 sin el segmento y pasa con él. Diez arranques locales consecutivos pasan. El workflow actualizado añade esa repetición para la siguiente ejecución; el run identificado a continuación probó el test una vez.
+
+La [ejecución completa 39158560322](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/runs/39158560322) pasa en **ambas plataformas**: macOS 26 M1, 33/33 CTest y 72 pruebas Python sin omisiones, incluida la fixture nativa de empaquetado; Linux, 72 pruebas Python sin fallos, con doce omisiones correspondientes a pruebas específicas de macOS. No se excluyó el test que fallaba ni se permitió sobrescribir memoria ajena. Estos contratos no equivalen a ejecutar el juego comercial en el runner.
+
+La app reconstruida y firmada se instaló en otro destino QA privado:
+
+```text
+Ejecutable SHA-256:
+d07775117c492da8907f324bcd14b2d0b1e6b0a504fdb3d84b6e08ef35ada40e
+CodeResources SHA-256:
+c222c3aa8ae3c1107c06ef639180c32d8a5101572826a165a85eebe2f0b37153
+```
+
+El recorrido de 166,9 s mostró partida, HUD y opciones originales con 1280 × 720 y pantalla completa de escritorio. Se midieron 1.117 fotogramas sin alternancias ABA/ABCA fuertes; no hubo errores fatales ni shaders ausentes. PCM: 120 s, 48 kHz estéreo, pico 9.293 y cero muestras saturadas. Recarga posterior de 20,254 s, sin errores ni shaders ausentes. Recursos internos, ejecución fuera del checkout, perfil aislado y app canónica del usuario intacta. Las imágenes de juego de esta prueba se revisaron; las catorce capturas públicas conservan su procedencia anterior.
 
 ## Límites conservados
 
