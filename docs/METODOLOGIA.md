@@ -111,3 +111,12 @@ Una app que funciona en el workspace no demuestra que las fuentes públicas repr
 - Instalar una candidata nueva de forma exclusiva y comprobarla desde fuera del checkout, sin variables de desarrollo. Mantener perfil QA separado, un solo paquete y evidencia acotada.
 
 El [README](../README.md) describe la cadena vigente; [UPSTREAM](../UPSTREAM.md) fija procedencia y licencias. El resultado de cada construcción debe indicar sus propias pruebas y límites.
+
+
+### Contratos que cambian de host
+
+Las fixtures deben incluir directamente los encabezados que consumen. Dos pruebas del emisor compilaban en macOS por inclusiones transitivas, pero Linux rechazó `std::abort` hasta añadir `<cstdlib>` a la fuente sintética. Se corrigió la fixture, sin cambiar la semántica del emisor.
+
+La prueba de páginas parciales provoca una excepción deliberada. Sus asignaciones de memoria del host pueden ocupar después un rango del perfil de arranque. El test del perfil se ejecuta ahora mediante `posix_spawn` en un proceso nuevo: conserva los seis rangos, commits al principio/final y rechazo de fallos. El padre mantiene todas las comprobaciones de páginas parciales, vecinos, solapamientos y memoria ajena. No se desactiva el test ni se relaja el criterio que protege mapas de macOS. El diagnóstico acotado informa de protección, límite de protección y tag de las regiones que impiden reservar.
+
+Leer los fallos de cada job de CI por separado. Un `tail` del log global puede mostrar sólo macOS y ocultar otro fallo de Linux. La insignia del README enlaza el estado real del workflow; las ejecuciones sin datos comerciales acreditan contratos, no una partida completa.

@@ -1,5 +1,7 @@
 # Castlevania Belmont’s Curse for macOS
 
+[![Pruebas del port](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/SwonDev/cstlvnia-blmont-to-macos/actions/workflows/docs.yml)
+
 Port no oficial de **Castlevania: Belmont’s Curse** para **macOS en Apple silicon**. Incluye el recompilador AArch64 → C++, el runtime adaptado, la capa gráfica NVN → Vulkan/MoltenVK, las adaptaciones del juego y las herramientas para construir una app local a partir de tu propia copia.
 
 Repositorio: [SwonDev/cstlvnia-blmont-to-macos](https://github.com/SwonDev/cstlvnia-blmont-to-macos). Contenido compatible: **1.1.0**; versión del paquete local: **1.1.4**. Los build ID y hashes admitidos están en [games/castlevania/build.json](games/castlevania/build.json). Un ExeFS de otra revisión se rechaza antes de generar código. RomFS debe proceder de la misma 1.1.0: se exige `Data/` al preparar y se contrasta el conjunto requerido de shaders después; ese inventario no valida todos los recursos del juego.
