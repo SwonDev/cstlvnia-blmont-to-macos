@@ -1,0 +1,111 @@
+{
+  "module": "main",
+  "sha256": "daefe60b1808c7545b9b1d969651b7e19abee9c325737ab64a01a7c86535076d",
+  "instructions": [
+    {
+      "offset": "0xca9ea4",
+      "expected": "0x1a88b2a8",
+      "replacement": "0x2a1503e8"
+    },
+    {
+      "offset": "0xca9eb0",
+      "expected": "0x1a98b288",
+      "replacement": "0x2a1403e8"
+    },
+    {
+      "offset": "0xd4fa8c",
+      "expected": "0x52808717",
+      "replacement": "0xb85343b7"
+    },
+    {
+      "offset": "0xd4fa98",
+      "expected": "0x5280f001",
+      "replacement": "0xb85303a1"
+    },
+    {
+      "offset": "0xd4fb34",
+      "expected": "0x5280f001",
+      "replacement": "0xb85303a1"
+    },
+    {
+      "offset": "0xd4fd00",
+      "expected": "0x5280f001",
+      "replacement": "0xb85303a1"
+    },
+    {
+      "offset": "0xd4fd04",
+      "expected": "0x52808702",
+      "replacement": "0xb85343a2"
+    },
+    {
+      "offset": "0xd3a6d8",
+      "expected": "0x52808703",
+      "replacement": "0x2a1403e3"
+    },
+    {
+      "offset": "0xd3a6e0",
+      "expected": "0x5280f002",
+      "replacement": "0x2a1503e2"
+    }
+  ],
+  "entry_hooks": [
+    {
+      "offset": "0xd4f930",
+      "symbol": "nx_castlevania_framebuffer_resolution"
+    },
+    {
+      "offset": "0xca9db4",
+      "symbol": "nx_castlevania_render_resolution"
+    },
+    {
+      "offset": "0xd3a680",
+      "symbol": "nx_castlevania_depth_resolution"
+    }
+  ],
+  "wrappers": [
+    {
+      "offset": "0x1d36860",
+      "symbol": "nx_castlevania_setting_active"
+    },
+    {
+      "offset": "0x1d37270",
+      "symbol": "nx_castlevania_video_defaults"
+    },
+    {
+      "offset": "0x1d36200",
+      "symbol": "nx_castlevania_supported_resolutions"
+    },
+    {
+      "offset": "0x1d37090",
+      "symbol": "nx_castlevania_resolution_changed"
+    },
+    {
+      "offset": "0x4e009c0",
+      "symbol": "nx_castlevania_fullscreen_mode"
+    },
+    {
+      "offset": "0x4e00a00",
+      "symbol": "nx_castlevania_set_fullscreen_mode"
+    },
+    {
+      "offset": "0x1d35ac0",
+      "symbol": "nx_castlevania_video_initialize"
+    },
+    {
+      "offset": "0x1d36570",
+      "symbol": "nx_castlevania_video_initialize"
+    },
+    {
+      "offset": "0x4e00980",
+      "symbol": "nx_castlevania_fullscreen"
+    },
+    {
+      "offset": "0x4d50820",
+      "symbol": "nx_castlevania_video_text"
+    },
+    {
+      "offset": "0x1dcc560",
+      "symbol": "nx_castlevania_loading_material"
+    }
+  ]
+}
