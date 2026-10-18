@@ -6,39 +6,47 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+namespace {
+int failure(int code, const char* condition) {
+    std::fprintf(stderr, "Memoria Mac: condición %d (%s), página %ld bytes\n",
+                 code, condition, static_cast<long>(getpagesize()));
+    return code;
+}
+}
+
 int main() {
     constexpr uint64_t base = 0xC00000000ull;
     const uint64_t page = getpagesize();
     const uint64_t size = page * 4;
     if (!nx::plat::reserve(base, size)) {
         std::fprintf(stderr, "No se pudo reservar el rango de módulos.\n");
-        return 1;
+        return failure(1, "reserva inicial");
     }
     auto* bytes = reinterpret_cast<unsigned char*>(base);
-    if (!nx::plat::commit(base, page)) return 2;
+    if (!nx::plat::commit(base, page)) return failure(2, "commit inicial");
     std::memset(bytes, 0xA5, page);
     nx::plat::decommit(base + page, page + 0x1000);
-    if (nx::plat::reserve(base, size)) return 3;
-    for (uint64_t i = 0; i < page; ++i) if (bytes[i] != 0xA5) return 4;
+    if (nx::plat::reserve(base, size)) return failure(3, "rechazo de reserva solapada");
+    for (uint64_t i = 0; i < page; ++i) if (bytes[i] != 0xA5) return failure(4, "vecino intacto tras liberar otra página");
     nx::plat::decommit(base + 0x1000, 0x1000);
     for (uint64_t i = 0; i < page; ++i)
-        if (bytes[i] != (i >= 0x1000 && i < 0x2000 ? 0 : 0xA5)) return 5;
+        if (bytes[i] != (i >= 0x1000 && i < 0x2000 ? 0 : 0xA5)) return failure(5, "liberación parcial de 4 KiB");
     nx::plat::decommit(base, page);
-    if (nx::plat::reserve(base, size)) return 6;
-    if (!nx::plat::commit(base, page)) return 7;
-    for (uint64_t i = 0; i < page; ++i) if (bytes[i] != 0) return 13;
-    if (!nx::plat::commit(base, page * 2)) return 14;
+    if (nx::plat::reserve(base, size)) return failure(6, "rechazo tras decommit de página completa");
+    if (!nx::plat::commit(base, page)) return failure(7, "recommit de página completa");
+    for (uint64_t i = 0; i < page; ++i) if (bytes[i] != 0) return failure(13, "ceros tras recommit");
+    if (!nx::plat::commit(base, page * 2)) return failure(14, "commit de dos páginas");
     std::memset(bytes, 0xA5, page * 2);
     nx::plat::decommit(base + page - 0x1000, 0x2000);
     for (uint64_t i = 0; i < page * 2; ++i)
-        if (bytes[i] != (i >= page - 0x1000 && i < page + 0x1000 ? 0 : 0xA5)) return 15;
+        if (bytes[i] != (i >= page - 0x1000 && i < page + 0x1000 ? 0 : 0xA5)) return failure(15, "liberación parcial entre páginas");
     alignas(16384) static unsigned char foreign[16384];
     std::memset(foreign, 0x5A, sizeof foreign);
-    if (nx::plat::commit(reinterpret_cast<uint64_t>(foreign), sizeof foreign)) return 16;
-    try { nx::plat::decommit(reinterpret_cast<uint64_t>(foreign) + 0x1000, 0x1000); return 17; }
+    if (nx::plat::commit(reinterpret_cast<uint64_t>(foreign), sizeof foreign)) return failure(16, "rechazo de commit ajeno");
+    try { nx::plat::decommit(reinterpret_cast<uint64_t>(foreign) + 0x1000, 0x1000); return failure(17, "rechazo de decommit ajeno"); }
     catch (const std::runtime_error&) {}
-    for (unsigned char value : foreign) if (value != 0x5A) return 18;
-    if (munmap(bytes, size)) return 8;
+    for (unsigned char value : foreign) if (value != 0x5A) return failure(18, "memoria ajena intacta");
+    if (munmap(bytes, size)) return failure(8, "munmap inicial");
     constexpr uint64_t ranges[][2] = {
         {0x400000000ull, 0x180000000ull},
         {0x600000000ull, 0x400000000ull},
@@ -48,11 +56,15 @@ int main() {
         {0xE00000000ull, 0x100000ull},
     };
     for (const auto& range : ranges) {
-        if (!nx::plat::reserve(range[0], range[1])) return 9;
-        if (!nx::plat::commit(range[0], page)) return 10;
-        if (!nx::plat::commit(range[0] + range[1] - page, page)) return 11;
+        if (!nx::plat::reserve(range[0], range[1])) {
+            std::fprintf(stderr, "Rango rechazado: 0x%llx + 0x%llx\n",
+                         static_cast<unsigned long long>(range[0]), static_cast<unsigned long long>(range[1]));
+            return failure(9, "reserva de rango del juego");
+        }
+        if (!nx::plat::commit(range[0], page)) return failure(10, "commit inicial del rango");
+        if (!nx::plat::commit(range[0] + range[1] - page, page)) return failure(11, "commit final del rango");
     }
     for (const auto& range : ranges)
-        if (munmap(reinterpret_cast<void*>(range[0]), range[1])) return 12;
+        if (munmap(reinterpret_cast<void*>(range[0]), range[1])) return failure(12, "munmap de rango");
     std::puts("Reserva exacta, rechazo de solapamientos y páginas parciales: PASS");
 }
